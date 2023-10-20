@@ -1,0 +1,2 @@
+[stepmania]
+192.168.122.246 stepmania_password=12345678 ansible_user=root

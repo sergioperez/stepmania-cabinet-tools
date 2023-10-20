@@ -1,0 +1,88 @@
+- name: Install ITGMania setup on Debian
+  hosts: all
+  gather_facts: false
+  vars:
+    stepmania_release: itgmania-0-7-0
+    stepmania_releases:
+      itgmania-0-7-0:
+        #url: "https://github.com/itgmania/itgmania/releases/download/v0.7.0/ITGmania-0.7.0-Linux-no-songs.tar.gz"
+        url: "https://github.com/itgmania/itgmania/releases/download/v0.7.0/ITGmania-0.7.0-Linux.tar.gz"
+        dest: "/home/stepmania/itgmania"
+        binary_path: "/home/stepmania/itgmania/itgmania"
+        extract_opts: ["--strip-components=2"]
+        dependencies:
+        - libopengl0
+        - libglx0
+        - libasound2
+        - libglu1-mesa
+        - libgtk-3-0
+        - libusb-0.1-4
+        - libogg0
+        - libvorbis0a
+        - libasound2
+        - xorg
+        - lightdm
+        - libpulse0
+
+  tasks:
+  - name: Create user
+    ansible.builtin.user:
+      name: stepmania
+      comment: game
+      password: "{{ stepmania_password| string | password_hash('sha512') }}"
+
+  - name: Create game directory
+    ansible.builtin.file:
+      path: "{{ stepmania_releases[stepmania_release].dest }}"
+      state: directory
+
+  - name: Download StepMania
+    ansible.builtin.unarchive:
+      src: "{{ stepmania_releases[stepmania_release].url }}"
+      remote_src: yes
+      dest: "{{ stepmania_releases[stepmania_release].dest }}"
+      creates: "{{ stepmania_releases[stepmania_release].binary_path }}"
+      extra_opts: "{{ stepmania_releases[stepmania_release].extract_opts }}"
+      owner: stepmania
+      group: stepmania
+
+  - name: Install dependencies
+    ansible.builtin.apt:
+      name: "{{ stepmania_releases[stepmania_release].dependencies }}"
+      cache_valid_time: 600
+
+  - name: Create game directory
+    ansible.builtin.file:
+      path: "{{ stepmania_releases[stepmania_release].dest }}"
+      state: directory
+
+  #
+  # Tasks to autoboot the game
+  #
+  - name: Enable lightdm autologin
+    ansible.builtin.lineinfile:
+       path: /etc/lightdm/lightdm.conf
+       regexp: ".*autologin-user\\s*=\\s*($|stepmania)"
+       line: "autologin-user = stepmania"
+
+  - name: Force LightDM to restart once SM is closed
+    ansible.builtin.lineinfile:
+       path: /etc/lightdm/lightdm.conf
+       regexp: ".*session-cleanup-script\\s*=\\s*($|pkill)"
+       line: "session-cleanup-script = pkill -P1 -fx /usr/sbin/lightdm"
+
+  - name: Disable mouse cursor in X
+    ansible.builtin.lineinfile:
+       path: /etc/lightdm/lightdm.conf
+       regexp: "(^|#)xserver-command\\s*=\\s*"
+       line: "xserver-command = X -nocursor"
+
+  - name: Use StepMania as X session
+    ansible.builtin.copy:
+       dest: /home/stepmania/.xsession
+       owner: stepmania 
+       group: stepmania
+       mode: '0644'
+       content: "exec {{ stepmania_releases[stepmania_release].binary_path }}"
+ 
+      
