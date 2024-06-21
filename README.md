@@ -23,3 +23,7 @@ Credits to Enrico Zini for writing nodm and a LightDM configuration guide: https
 3. Set the password for the `stepmania` user inside the `stepmania_password` variable of the `inventory` file
 
 4. Run the Ansible playbook: `ansible-playbook install.yaml`
+
+# Implementation details
+
+- The set of available StepMania/ITGMania versions are defined under `group_vars/all`.

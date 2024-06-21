@@ -1,29 +1,8 @@
-- name: Install ITGMania setup on Debian
+- name: Setup a Debian minimal install to run as an ITGMania arcade system
   hosts: all
   gather_facts: false
   vars:
-    stepmania_release: itgmania-0-7-0
-    stepmania_releases:
-      itgmania-0-7-0:
-        #url: "https://github.com/itgmania/itgmania/releases/download/v0.7.0/ITGmania-0.7.0-Linux-no-songs.tar.gz"
-        url: "https://github.com/itgmania/itgmania/releases/download/v0.7.0/ITGmania-0.7.0-Linux.tar.gz"
-        dest: "/home/stepmania/itgmania"
-        binary_path: "/home/stepmania/itgmania/itgmania"
-        extract_opts: ["--strip-components=2"]
-        dependencies:
-        - libopengl0
-        - libglx0
-        - libasound2
-        - libglu1-mesa
-        - libgtk-3-0
-        - libusb-0.1-4
-        - libogg0
-        - libvorbis0a
-        - libasound2
-        - xorg
-        - lightdm
-        - libpulse0
-
+    stepmania_release: itgmania-0-9-0
   tasks:
   - name: Create user
     ansible.builtin.user:
@@ -48,7 +27,7 @@
 
   - name: Install dependencies
     ansible.builtin.apt:
-      name: "{{ stepmania_releases[stepmania_release].dependencies }}"
+      name: "{{ common_dependencies + stepmania_releases[stepmania_release].dependencies }}"
       cache_valid_time: 600
 
   - name: Create game directory
@@ -83,6 +62,23 @@
        owner: stepmania 
        group: stepmania
        mode: '0644'
-       content: "exec {{ stepmania_releases[stepmania_release].binary_path }}"
- 
-      
+       content: "nice -n 5 {{ stepmania_releases[stepmania_release].binary_path }}"
+
+  - name: Set GRUB configuration (usbhid - polling rate)
+    ansible.builtin.copy:
+      src: files/grub.cfg
+      dest: /etc/default/grub
+      mode: "0644"
+      owner: root
+      group: root
+    register: _grub_config
+
+  - name: Update grub
+    ansible.builtin.command: update-grub
+    when: _grub_config.changed
+
+  - name: Enable and start Lightdm
+    ansible.builtin.service:
+      name: lightdm
+      state: restarted
+      enabled: true
