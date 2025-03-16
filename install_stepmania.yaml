@@ -2,7 +2,8 @@
   hosts: all
   gather_facts: false
   vars:
-    stepmania_release: itgmania-0-9-0
+    stepmania_release: itgmania-1-0-0
+    arch: x86_64
   tasks:
   - name: Create user
     ansible.builtin.user:
@@ -17,13 +18,14 @@
 
   - name: Download StepMania
     ansible.builtin.unarchive:
-      src: "{{ stepmania_releases[stepmania_release].url }}"
+      src: "{{ stepmania_releases[stepmania_release].url[arch] }}"
       remote_src: yes
       dest: "{{ stepmania_releases[stepmania_release].dest }}"
       creates: "{{ stepmania_releases[stepmania_release].binary_path }}"
       extra_opts: "{{ stepmania_releases[stepmania_release].extract_opts }}"
       owner: stepmania
       group: stepmania
+    tags: download
 
   - name: Install dependencies
     ansible.builtin.apt:
@@ -72,10 +74,12 @@
       owner: root
       group: root
     register: _grub_config
+    tags: grub
 
   - name: Update grub
     ansible.builtin.command: update-grub
     when: _grub_config.changed
+    tags: grub
 
   - name: Enable and start Lightdm
     ansible.builtin.service:
