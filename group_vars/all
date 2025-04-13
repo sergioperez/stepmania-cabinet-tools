@@ -34,3 +34,4 @@ common_dependencies:
 - xorg
 - lightdm
 - libpulse0
+- mesa-vulkan-drivers
