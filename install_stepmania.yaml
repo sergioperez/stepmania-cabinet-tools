@@ -2,7 +2,7 @@
   hosts: all
   gather_facts: false
   vars:
-    stepmania_release: itgmania-1-0-0
+    stepmania_release: itgmania-1-0-2
     arch: x86_64
   tasks:
   - name: Create user
@@ -10,6 +10,9 @@
       name: stepmania
       comment: game
       password: "{{ stepmania_password| string | password_hash('sha512') }}"
+      groups: input
+      append: yes
+    tags: user
 
   - name: Create game directory
     ansible.builtin.file:
