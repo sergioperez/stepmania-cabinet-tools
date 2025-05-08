@@ -36,7 +36,7 @@ Credits to Enrico Zini for writing nodm and a LightDM configuration guide: https
 
 3. Set the password for the `stepmania` user inside the `stepmania_password` variable of the `inventory` file
 
-4. Run the Ansible playbook: `ansible-playbook install.yaml`
+4. Run the Ansible playbook: `ansible-playbook install_stepmania.yaml`
 
 ## ARM boards
 
@@ -44,7 +44,7 @@ Credits to Enrico Zini for writing nodm and a LightDM configuration guide: https
 
 2. Follow the same steps specified in `Installation steps`, but this time, run the playbook as:
 
-`ansible-playbook install.yaml -e arch=arm64 --skip-tags grub`
+`ansible-playbook install_stepmania.yaml -e arch=arm64 --skip-tags grub`
 
 ### Raspberry Pi
 
