@@ -2,9 +2,23 @@
 
 - Debian 12 base system (minimal, no desktop environment)
 
-- python3.11 openssh-server
+- python3.11 openssh-server (installed in the target system)
 
-- Being able to SSH as root to the destination host
+- Being able to SSH as root/sudoers user to the destination host
+
+## To run the playbook
+
+You can run ansible directly in your host. But, alternatively, you can install Podman or Docker and run it containerized:
+
+```
+podman run -it  docker.io/library/rockylinux:9 bash
+dnf install -y ansible-core
+cd /tmp
+git clone https://github.com/sergioperez/stepmania-cabinet-tools.git
+#ansible-playbook command -> Look afterwards in the guide
+```
+
+* Note: If you prefer to use Docker, just write "docker" instaed of "podman"
 
 # Outcome
 
