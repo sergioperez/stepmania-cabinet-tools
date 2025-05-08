@@ -1,6 +1,6 @@
 # Prerequisites
 
-- Debian 12 base system
+- Debian 12 base system (minimal, no desktop environment)
 
 - python3.11 openssh-server
 
@@ -24,15 +24,27 @@ Credits to Enrico Zini for writing nodm and a LightDM configuration guide: https
 
 4. Run the Ansible playbook: `ansible-playbook install.yaml`
 
-## Raspberry Pi OS
+## ARM boards
 
-**Note:** I have not fully tested this yet.
+1. Install a minimal Debian 12 based distribution for your board, as could be Raspberry Pi OS Lite, Armbian Server, Debian 12 itself, or other.
 
-ITGMania does not offer aarch64 builds yet, but it does support it. If you compile it yourself, this playbook will also get your Raspberry Pi OS Lite installation ready for ITGMania.
+2. Follow the same steps specified in `Installation steps`, but this time, run the playbook as:
 
-Note: You will want to disable the grub tasks with `--skip-tags=grub`
+`ansible-playbook install.yaml -e arch=arm64 --skip-tags grub`
 
-For 15khz interlaced modes, see: https://www.raspberrypi.com/news/how-we-added-interlaced-video-to-raspberry-pi-5/ (**Note:** I have not tested this yet)
+### Raspberry Pi
+
+Using a Raspberry Pi for ITGMania can be a quite interesting idea, as:
+
+- It allows us to standardize the hardware we use (available almost anywhere)
+
+- The boards are available in the market for long (although there are better options when it comes to LTS hardware, as Radxa or NanoPi)
+
+- It easily supports 15khz resolutions, for CRT cabinets.
+
+I will soon review uploading my Alsa configuration, as in theory, two boards with the same hardware, and the same Alsa configuration, should have the same impact on the Global Offset.
+
+For 15khz interlaced modes in Raspberry Pi 5, see: https://www.raspberrypi.com/news/how-we-added-interlaced-video-to-raspberry-pi-5/
 
 For 1khz USB polling rate, set the parameters `usbhid.kbpoll=1`, `usbhid.jspoll=1` and  `usbhid.mousepoll=1` to `/boot/firmware/cmdline.txt`
 
