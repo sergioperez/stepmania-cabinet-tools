@@ -3,6 +3,10 @@ stepmania_releases:
     url:
       x86_64: "https://github.com/itgmania/itgmania/releases/download/v1.1.0/ITGmania-1.1.0-Linux.tar.gz"
       arm64: "https://github.com/sergioperez/itgmania/releases/download/v1.1.0/ITGmania-1.1.0-Linux-arm64.tar.gz"
+    dest: "/home/stepmania/itgmania110"
+    binary_path: "/home/stepmania/itgmania110/itgmania"
+    extract_opts: ["--strip-components=2"]
+    dependencies: []
   itgmania-1-0-2:
     url:
       x86_64: "https://github.com/itgmania/itgmania/releases/download/v1.0.2/ITGmania-1.0.2-Linux.tar.gz"
