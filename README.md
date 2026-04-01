@@ -1,42 +1,54 @@
-# Prerequisites
+# About
 
-- Debian 12 base system (minimal, no desktop environment)
+This project is aimed at those who want to set up a lightweight Linux machine dedicated to running StepMania or ITGMania.
+It will set up a fresh Debian install to automatically run StepMania on boot. As soon as StepMania is closed, it will immediately restart it.
+Additionally, compared to a regular Debian install:
+* The USB polling rate is set to 1000 Hz, giving better performance to JPACs and USB input cards
+* Latency is reduced by only handling audio playback with ALSA instead of PulseAudio
+* Efficient use of system resources due to lack of desktop environment and unneeded processes, making this ideal for older, weaker hardware
+
+After installation, the `stepmania` user will be available to connect over SCP to push files
+
+## Prerequisites
+
+- Debian 13 base system (minimal, no desktop environment)
 
 - python3.11 openssh-server (installed in the target system)
 
-- Being able to SSH as root/sudoers user to the destination host
+- An internet connection on the target system
 
-## To run the playbook
+- Being able to SSH as root/sudoers user to the target system
 
-You can run ansible directly in your host. But, alternatively, you can install Podman or Docker and run it containerized:
+# Installation
+
+1. Clone this repository onto your host
+
+2. Install a Debian minimal OS into your target system:
+* When creating the first user, make sure its username is not `stepmania`
+* At the last steps of the installation process, check the box to install the SSH server
+
+3. Set the IP address or hostname of your target system into the `inventory` file
+
+4. Set the password for the `stepmania` user inside the `stepmania_password` variable of the `inventory` file
+
+5. Run the Ansible playbook: `ansible-playbook install_stepmania.yaml`
+
+6. When the playbook has finished, the target system will reboot and Stepmania will automatically start!
+
+### Using containers
+
+You can run step #4 directly in your host. Alternatively, you can install Podman or Docker and run it containerized:
 
 ```
 podman run -it  docker.io/library/rockylinux:9 bash
 dnf install -y ansible-core
 cd /tmp
 git clone https://github.com/sergioperez/stepmania-cabinet-tools.git
-#ansible-playbook command -> Look afterwards in the guide
+ansible-playbook install_stepmania.yaml
 ```
 
-* Note: If you prefer to use Docker, just write "docker" instaed of "podman"
+* Note: If you prefer to use Docker, just write "docker" instead of "podman"
 
-# Outcome
-
-This will setup your Debian host to automatically run StepMania on boot. As soon as StepMania is closed, it will re-run it.
-
-The "stepmania" user will be available to connect over SCP to push files
-
-Credits to Enrico Zini for writing nodm and a LightDM configuration guide: https://www.enricozini.org/blog/2019/himblick/x-autologin/
-
-# Installation steps
-
-1. Install a Debian minimal OS into your host
-
-2. Set the IP address or hostname of your host into the `inventory` file
-
-3. Set the password for the `stepmania` user inside the `stepmania_password` variable of the `inventory` file
-
-4. Run the Ansible playbook: `ansible-playbook install_stepmania.yaml`
 
 ## ARM boards
 
@@ -62,6 +74,10 @@ For 15khz interlaced modes in Raspberry Pi 5, see: https://www.raspberrypi.com/n
 
 For 1khz USB polling rate, set the parameters `usbhid.kbpoll=1`, `usbhid.jspoll=1` and  `usbhid.mousepoll=1` to `/boot/firmware/cmdline.txt`
 
-# Implementation details
+## Implementation details
 
-- The set of available StepMania/ITGMania versions are defined under `group_vars/all`.
+The set of available StepMania/ITGMania versions are defined under `group_vars/all`.
+
+## Credits
+
+Thanks to Enrico Zini for writing nodm and a LightDM configuration guide: https://www.enricozini.org/blog/2019/himblick/x-autologin/
