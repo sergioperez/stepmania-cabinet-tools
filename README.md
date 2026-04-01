@@ -47,6 +47,7 @@ ssh youruser@yourdevice exit
 
 cd
 wget https://github.com/sergioperez/stepmania-cabinet-tools/new/release.zip
+unzip release.zip
 cd stepmania-cabinet-tools-release
 
 ansible-playbook install_stepmania.yaml
