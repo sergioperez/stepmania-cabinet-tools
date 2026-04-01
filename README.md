@@ -37,13 +37,18 @@ After installation, the `stepmania` user will be available to connect over SCP t
 
 ### Using containers
 
-You can run step #4 directly in your host. Alternatively, you can install Podman or Docker and run it containerized:
+You can run step #5 directly in your host. Alternatively, you can install Podman or Docker and run it containerized:
 
 ```
-podman run -it  docker.io/library/rockylinux:9 bash
-dnf install -y ansible-core
-cd /tmp
-git clone https://github.com/sergioperez/stepmania-cabinet-tools.git
+podman run -it  docker.io/alpine/ansible:2.20.0 bash
+
+# Check that you can access your device
+ssh youruser@yourdevice exit
+
+cd
+wget https://github.com/sergioperez/stepmania-cabinet-tools/new/release.zip
+cd stepmania-cabinet-tools-release
+
 ansible-playbook install_stepmania.yaml
 ```
 
@@ -67,8 +72,6 @@ Using a Raspberry Pi for ITGMania can be a quite interesting idea, as:
 - The boards are available in the market for long (although there are better options when it comes to LTS hardware, as Radxa or NanoPi)
 
 - It easily supports 15khz resolutions, for CRT cabinets.
-
-I will soon review uploading my Alsa configuration, as in theory, two boards with the same hardware, and the same Alsa configuration, should have the same impact on the Global Offset.
 
 For 15khz interlaced modes in Raspberry Pi 5, see: https://www.raspberrypi.com/news/how-we-added-interlaced-video-to-raspberry-pi-5/
 
