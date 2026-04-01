@@ -47,7 +47,9 @@ common_dependencies:
 - libogg0
 - libvorbis0a
 - libasound2
+- alsa-utils
 - xorg
 - lightdm
 - libpulse0
 - mesa-vulkan-drivers
+- firmware-amd-graphics
