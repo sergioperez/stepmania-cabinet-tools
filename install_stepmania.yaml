@@ -2,7 +2,7 @@
   hosts: all
   gather_facts: false
   vars:
-    stepmania_release: itgmania-1-2-1
+    stepmania_release: itgmania-1-3-0
     arch: x86_64
   tasks:
   - name: Create user
