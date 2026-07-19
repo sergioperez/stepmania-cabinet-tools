@@ -78,6 +78,24 @@ For 15khz interlaced modes in Raspberry Pi 5, see: https://www.raspberrypi.com/n
 
 For 1khz USB polling rate, set the parameters `usbhid.kbpoll=1`, `usbhid.jspoll=1` and  `usbhid.mousepoll=1` to `/boot/firmware/cmdline.txt`
 
+### Packman
+
+[StepMania Packman](https://github.com/sergioperez/stepmania-packman) is a tool to configure the desired list of packs in your system
+declaratively.
+
+To use it, set the following variables for your host in your inventory:
+
+`disable_packman=false` Prevents packman from running
+
+`sm_pack_search_url="https://stepmaniaoffline.lan"`
+
+`arch=x86_64`
+
+`pack_folder=/home/stepmania/.itgmania/Songs` (Default as-is)
+
+`(Optional) pack_yaml_url: "https://my-web-server.lan/packs.yaml" Allows you to manage the packs.yaml file remotely
+
+
 ## Implementation details
 
 The set of available StepMania/ITGMania versions are defined under `group_vars/all`.

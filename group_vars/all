@@ -31,3 +31,10 @@ common_dependencies:
 - libpulse0
 - mesa-vulkan-drivers
 - firmware-amd-graphics
+
+packman_release:
+  url:
+    arm64: "https://github.com/sergioperez/stepmania-packman/releases/download/20260718/packman-arm64-20260718-97b3610"
+    x86_64: "https://github.com/sergioperez/stepmania-packman/releases/download/20260718/packman-amd64-20260718-97b3610"
+    riscv64: "https://github.com/sergioperez/stepmania-packman/releases/download/20260718/packman-riscv64-20260718-97b3610"
+  binary_path: "/usr/local/bin/packman"
