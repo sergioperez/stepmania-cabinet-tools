@@ -1,0 +1,121 @@
+---
+- name: Install and configure packman
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    pack_folder: "/home/stepmania/.itgmania/Songs"
+    pack_yaml_url: ""
+    disable_packman: false
+
+    arch: x86_64
+
+  pre_tasks:
+    - name: Fail if required variables are not defined
+      ansible.builtin.assert:
+        that:
+          - packman_dir is defined
+          - sm_pack_search_url is defined
+        fail_msg: "packman_dir and sm_pack_search_url must be defined in inventory."
+        quiet: true
+  tasks:
+    - name: Download packman binary into /usr/local/bin
+      ansible.builtin.get_url:
+        url: "{{ packman_release.url[arch] }}"
+        dest: /usr/local/bin/packman
+        mode: "0755"
+        force: true
+
+    - name: Ensure packman binary is executable
+      ansible.builtin.file:
+        path: /usr/local/bin/packman
+        mode: "0755"
+
+    # Do checks to see if we can enable the systemd unit and use packman
+    - name: Validate packman configuration
+      when: not disable_packman
+      block:
+        - name: Ensure pack_folder exists
+          ansible.builtin.stat:
+            path: "{{ pack_folder }}"
+          register: _pack_folder_stat
+
+        - name: Fail if pack_folder does not exist
+          ansible.builtin.assert:
+            that:
+              - _pack_folder_stat.stat.exists
+              - _pack_folder_stat.stat.isdir
+            fail_msg: "pack_folder '{{ pack_folder }}' does not exist or is not a directory."
+            quiet: true
+
+        - name: Ensure packman_dir exists
+          ansible.builtin.file:
+            path: "{{ packman_dir }}"
+            state: directory
+            mode: "0755"
+            owner: stepmania
+            group: stepmania
+
+        - name: Ensure {{ packman_dir }}/packs.yaml exists
+          ansible.builtin.copy:
+            dest: "{{ packman_dir }}/packs.yaml"
+            content: |
+              packs: []
+            force: false
+            mode: "0644"
+            owner: stepmania
+            group: stepmania
+
+        - name: Check sm_pack_search_url returns HTTP 200
+          ansible.builtin.uri:
+            url: "{{ sm_pack_search_url }}"
+            method: GET
+            status_code: 200
+          register: _sm_pack_search_check
+
+        - name: Validate pack_yaml_url when defined
+          when: pack_yaml_url is defined and pack_yaml_url | length > 0
+          block:
+            - name: Fetch pack_yaml_url content
+              ansible.builtin.uri:
+                url: "{{ pack_yaml_url }}"
+                method: GET
+                status_code: 200
+                return_content: true
+              register: _pack_yaml_response
+
+            - name: Parse fetched YAML content
+              ansible.builtin.set_fact:
+                _pack_yaml_content: "{{ _pack_yaml_response.content | from_yaml }}"
+
+            - name: Validate pack_yaml_url content structure
+              ansible.builtin.assert:
+                that:
+                  - _pack_yaml_content is mapping
+                  - "'packs' in _pack_yaml_content"
+                  - _pack_yaml_content.packs is sequence
+                  - _pack_yaml_content.packs | selectattr('id', 'defined') | list | length == _pack_yaml_content.packs | length
+                fail_msg: >-
+                  pack_yaml_url content at {{ pack_yaml_url }} is not valid.
+                  Expected a top-level 'packs' list where each item has an 'id' key.
+                quiet: true
+
+    # Systemd unit - Start packman on boot
+    - name: Install packman systemd unit
+      ansible.builtin.template:
+        src: files/packman/packman.service.j2
+        dest: /etc/systemd/system/packman.service
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: systemctl daemon-reload
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Enable and start packman service
+      ansible.builtin.systemd:
+        name: packman.service
+        enabled: true
+        daemon_reload: true
+        state: "{{ 'stopped' if disable_packman else 'started' }}"
