@@ -1,0 +1,6 @@
+[Unit]
+Description=Start/stop control-panel based on active VT
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tty-switch.sh

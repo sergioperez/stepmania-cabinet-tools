@@ -35,6 +35,16 @@ After installation, the `stepmania` user will be available to connect over SCP t
 
 6. When the playbook has finished, the target system will reboot and Stepmania will automatically start!
 
+# Usage
+
+- The game will start automatically
+
+- Access the host IP:9090 to admin the host. This is also available locally by pressing **Control+Alt+F2**
+
+- To get a desktop, press **Control+Alt+F3**
+
+- To return to the game, press **Control+Alt+F1**
+
 ### Using containers
 
 You can run step #5 directly in your host. Alternatively, you can install Podman or Docker and run it containerized:

@@ -5,13 +5,33 @@
     stepmania_release: itgmania-1-3-0
     arch: x86_64
   tasks:
+  - name: Gather all known systemd services
+    ansible.builtin.service_facts:
+
+  - name: Try to disable most common display managers (In case this is not a fresh minimal install)
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      enabled: false
+      state: stopped
+    when: item in ansible_facts.services
+    with_items:
+      - lightdm.service
+      - sddm.service
+      - gdm.service
+      - gdm3.service
+      - xdm.service
+      - lxdm.service
+      - slim.service
+    ignore_errors: true
+
   - name: Create user
     ansible.builtin.user:
       name: stepmania
-      comment: game
+      comment: stepmania game user
       password: "{{ stepmania_password| string | password_hash('sha512') }}"
       groups: input
       append: yes
+      shell: "/usr/bin/bash"
     tags: user
 
   - name: Create game directory
@@ -40,34 +60,13 @@
       path: "{{ stepmania_releases[stepmania_release].dest }}"
       state: directory
 
-  #
-  # Tasks to autoboot the game
-  #
-  - name: Enable lightdm autologin
-    ansible.builtin.lineinfile:
-       path: /etc/lightdm/lightdm.conf
-       regexp: ".*autologin-user\\s*=\\s*($|stepmania)"
-       line: "autologin-user = stepmania"
-
-  - name: Force LightDM to restart once SM is closed
-    ansible.builtin.lineinfile:
-       path: /etc/lightdm/lightdm.conf
-       regexp: ".*session-cleanup-script\\s*=\\s*($|pkill)"
-       line: "session-cleanup-script = pkill -P1 -fx /usr/sbin/lightdm"
-
-  - name: Disable mouse cursor in X
-    ansible.builtin.lineinfile:
-       path: /etc/lightdm/lightdm.conf
-       regexp: "(^|#)xserver-command\\s*=\\s*"
-       line: "xserver-command = X -nocursor"
-
-  - name: Use StepMania as X session
+  - name: Create file that defines which game will be executed
     ansible.builtin.copy:
-       dest: /home/stepmania/.xsession
+       dest: /home/stepmania/run_game.sh
        owner: stepmania 
        group: stepmania
        mode: '0644'
-       content: "nice -n 5 {{ stepmania_releases[stepmania_release].binary_path }}"
+       content: "nice -n 1 {{ stepmania_releases[stepmania_release].binary_path }}"
 
   - name: Set GRUB configuration (usbhid - polling rate)
     ansible.builtin.copy:
@@ -84,8 +83,106 @@
     when: _grub_config.changed
     tags: grub
 
-  - name: Enable and start Lightdm
-    ansible.builtin.service:
-      name: lightdm
-      state: restarted
+#
+# Install tty_settings and tty_desktop
+#
+  - name: Install tty dependencies
+    ansible.builtin.apt:
+      name: "{{ extra_packages }}"
+      cache_valid_time: 600
+      install_recommends: no
+
+  # Upload tty run scripts
+  - name: tty-all - Upload ttyX-name.sh scripts
+    ansible.builtin.copy:
+      src: "files/{{ item }}"
+      dest: /usr/local/bin/
+      owner: root
+      group: root
+      mode: '0755'
+    with_items:
+    - tty-switch.sh
+    - tty_settings/tty1-game.sh
+    - tty_settings/tty2-firefox.sh
+    - tty_settings/tty3-desktop.sh
+
+  # Upload systemd units
+  - name: tty-all - Upload ttyX-name.sh scripts
+    ansible.builtin.copy:
+      src: "files/{{ item }}"
+      dest: /etc/systemd/system/
+      owner: root
+      group: root
+      mode: '0644'
+    with_items:
+    - tty-watch.path
+    - tty-watch.service
+    - tty_settings/game.service
+    - tty_settings/settings.service
+    - tty_settings/desktop.service
+
+  # Upload greetd config
+  - name: tty3 - Upload greetd config.toml
+    ansible.builtin.copy:
+      src: files/greetd_config.toml
+      dest: /etc/greetd/config.toml
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: tty2-settings - Create firefox profile directory
+    ansible.builtin.file:
+      path: "/home/stepmania/.settings-firefox-profile"
+      state: directory
+      owner: stepmania
+      group: stepmania
+
+  - name: Copy JWM config
+    ansible.builtin.copy:
+      src: files/system.jwmrc
+      dest: /etc/jwm/system.jwmrc
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: ensure firefox policies directory exists
+    ansible.builtin.file:
+      path: /etc/firefox/policies
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: create firefox profile
+    ansible.builtin.copy:
+      src: files/tty_settings/policies.json
+      dest: /etc/firefox/policies/policies.json
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Ensure greetd is disabled
+    ansible.builtin.systemd:
+      name: greetd.service
+      enabled: false
+      state: stopped
+
+  - name: Enable and start game
+    ansible.builtin.systemd:
+      name: game.service
       enabled: true
+      state: started
+
+  - name: Enable and start tty-watch and cockpit
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      enabled: true
+      state: started
+    with_items:
+    - tty-watch.path
+    - cockpit.service
+
+  - name: Restart polkit
+    ansible.builtin.systemd:
+      name: polkit
+      state: restarted
