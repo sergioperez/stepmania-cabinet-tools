@@ -38,6 +38,9 @@
     ansible.builtin.file:
       path: "{{ stepmania_releases[stepmania_release].dest }}"
       state: directory
+      owner: stepmania
+      group: stepmania
+    tags: download
 
   - name: Download StepMania
     ansible.builtin.unarchive:
