@@ -1,0 +1,21 @@
+[Unit]
+Description=Settings in tty3
+After=systemd-user-sessions.service getty@tty3.service
+Conflicts=getty@tty3.service
+
+[Service]
+Type=simple
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
+TimeoutStopSec=30s
+KeyringMode=shared
+Restart=always
+RestartSec=1
+StartLimitBurst=5
+StartLimitInterval=30
+TTYPath=/dev/tty3
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+UtmpIdentifier=tty3
+ExecStart=greetd --vt 3

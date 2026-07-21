@@ -1,0 +1,10 @@
+# /etc/systemd/system/tty-watch.path
+[Unit]
+Description=Watch for active VT changes
+
+[Path]
+PathModified=/sys/class/tty/tty0/active
+
+[Install]
+WantedBy=multi-user.target
+

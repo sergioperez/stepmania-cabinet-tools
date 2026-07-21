@@ -27,10 +27,20 @@ common_dependencies:
 - libasound2
 - alsa-utils
 - xorg
-- lightdm
 - libpulse0
 - mesa-vulkan-drivers
 - firmware-amd-graphics
+
+extra_packages:
+- jwm
+- pcmanfm
+- firefox-esr
+- greetd 
+- tuigreet
+- cockpit
+- gvfs
+- polkitd
+- udisks2
 
 packman_release:
   url:
