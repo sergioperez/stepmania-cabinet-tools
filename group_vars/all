@@ -2,7 +2,7 @@ stepmania_releases:
   deadsync-0-5:
     url:
       x86_64: "https://github.com/pnn64/deadsync/releases/download/v0.5.0/deadsync-v0.5.0-x86_64-linux.tar.gz"
-      arm64: ""
+      arm64: "https://github.com/pnn64/deadsync/releases/download/v0.5.0/deadsync-v0.5.0-arm64-linux.tar.gz"
     dest: "/home/stepmania/deadsync050"
     binary_path: "/home/stepmania/deadsync050/deadsync"
     extract_opts: ["--strip-components=1"]
