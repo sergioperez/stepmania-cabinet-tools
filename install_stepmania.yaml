@@ -42,6 +42,37 @@
       group: stepmania
     tags: download
 
+  # All the addons (audio device picker) will set configurations
+  # for all the supported games
+  - name: Ensure game config and song directories exist
+    ansible.builtin.file:
+      path: "/home/stepmania/{{ item }}"
+      state: directory
+      owner: stepmania
+      group: stepmania
+    tags: download
+    with_items:
+    - ".itgmania/Save"
+    - ".local/share/deadsync"
+    - "songs"
+
+  - name: Ensure AdditionalSongFoldersReadOnly is set in itgmania Preferences.ini
+    ansible.builtin.ini_file:
+      path: "/home/stepmania/{{ item }}"
+      section: Options
+      option: AdditionalSongFoldersReadOnly
+      value: /home/stepmania/songs
+      owner: stepmania
+      group: stepmania
+      mode: '0644'
+      create: true
+      backup: true
+      no_extra_spaces: true
+    with_items:
+    - ".itgmania/Save/Preferences.ini"
+    - ".local/share/deadsync/deadsync.ini"
+
+
   - name: Download StepMania
     ansible.builtin.unarchive:
       src: "{{ stepmania_releases[stepmania_release].url[arch] }}"
