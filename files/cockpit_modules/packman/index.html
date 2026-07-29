@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepMania Packman</title>
+    <link rel="stylesheet" href="packman.css">
+</head>
+<body>
+    <div class="pm-app">
+        <header class="pm-header">
+            <h1>StepMania Packman</h1>
+            <nav class="pm-tabs" role="tablist">
+                <button type="button" class="pm-tab" data-tab="packs" role="tab" aria-selected="false" id="packs-tab-btn">
+                    Packs
+                </button>
+                <button type="button" class="pm-tab active" data-tab="settings" role="tab" aria-selected="true">
+                    Settings
+                </button>
+            </nav>
+        </header>
+
+        <div id="pm-global-alert" class="pm-alert" hidden></div>
+
+        <!-- ===================== PACKS PANEL ===================== -->
+        <section id="panel-packs" class="pm-panel" hidden>
+
+            <div id="packs-gate" class="pm-gate">
+                <p>
+                    Packs are not available until <strong>Pack search URL</strong> is configured
+                    and saved in Settings.
+                </p>
+                <button type="button" class="pm-btn" id="btn-goto-settings">Go to settings</button>
+            </div>
+
+            <div id="packs-content" hidden>
+                <p id="disabled-note" class="pm-hint" hidden>
+                    Packman is currently <strong>disabled</strong> in Settings — running it will
+                    have no effect until it is re-enabled.
+                </p>
+                <div class="pm-toolbar">
+                    <div class="pm-db-status">
+                        <span>Database date: </span>
+                        <strong id="db-date">never downloaded</strong>
+                    </div>
+                    <div class="pm-toolbar-actions">
+                        <span id="refresh-cooldown-note" class="pm-inline-status" hidden></span>
+                        <button type="button" id="btn-refresh-db" class="pm-btn">
+                            Refresh database
+                        </button>
+                        <button type="button" id="btn-run-packman" class="pm-btn pm-btn-primary">
+                            Run Packman
+                        </button>
+                    </div>
+                </div>
+
+                <div id="run-output-wrap" class="pm-run-output" hidden>
+                    <div class="pm-run-output-header">
+                        <span id="run-output-title">Packman output</span>
+                        <button type="button" id="btn-close-output" class="pm-btn pm-btn-link">close</button>
+                    </div>
+                    <pre id="run-output"></pre>
+                </div>
+
+                <div class="pm-search-row">
+                    <input type="search" id="pack-search" placeholder="Search packs by name…">
+                    <label class="pm-checkbox-label">
+                        <input type="checkbox" id="show-installed-only">
+                        Show only installed
+                    </label>
+                    <span class="pm-sort-group">
+                        <span class="pm-sort-label">Sort by:</span>
+                        <button type="button" class="pm-sort-btn pm-sort-btn-active" data-sort="id">
+                            Date <span class="pm-sort-arrow">&#9660;</span>
+                        </button>
+                        <button type="button" class="pm-sort-btn" data-sort="name">
+                            Name <span class="pm-sort-arrow"></span>
+                        </button>
+                    </span>
+                    <span id="pack-count" class="pm-inline-status"></span>
+                </div>
+
+                <table class="pm-table">
+                    <thead>
+                        <tr>
+                            <th>Pack name</th>
+                            <th>Song count</th>
+                            <th>Installed</th>
+                            <th>State</th>
+                        </tr>
+                    </thead>
+                    <tbody id="packs-tbody">
+                        <tr class="pm-empty-row">
+                            <td colspan="4">No pack database loaded yet. Click "Refresh database".</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pm-pagination">
+                    <button type="button" id="btn-prev-page" class="pm-btn">&larr; Previous</button>
+                    <span id="page-indicator" class="pm-inline-status">Page 0 of 0</span>
+                    <button type="button" id="btn-next-page" class="pm-btn">Next &rarr;</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SETTINGS PANEL ===================== -->
+        <section id="panel-settings" class="pm-panel">
+            <form id="settings-form" class="pm-form" novalidate>
+                <div class="pm-field">
+                    <label for="fld-search-url">
+                        Pack search URL <span class="pm-required">*</span>
+                    </label>
+                    <input type="text" id="fld-search-url" name="SM_PACK_SEARCH_URL"
+                           placeholder="https://packs.example.org" autocomplete="off">
+                    <p class="pm-hint">
+                        Base URL of the simfile-pack-search instance. Packman reads
+                        <code>SM_PACK_SEARCH_URL</code>, and the pack database is fetched from
+                        <code>&lt;this URL&gt;/api/packs</code>.
+                    </p>
+                    <p class="pm-error" data-error-for="SM_PACK_SEARCH_URL" hidden></p>
+                </div>
+
+                <div class="pm-field">
+                    <label for="fld-yaml-url">
+                        Pack list URL <span class="pm-optional">(optional)</span>
+                    </label>
+                    <input type="text" id="fld-yaml-url" name="PACK_YAML_URL"
+                           placeholder="https://example.org/packs.yaml" autocomplete="off">
+                    <p class="pm-hint">
+                        If set, Packman downloads <code>packs.yaml</code> from this URL instead of
+                        using a locally managed file. On save, this URL is checked for valid
+                        <code>packs.yaml</code> syntax.
+                    </p>
+                    <p class="pm-error" data-error-for="PACK_YAML_URL" hidden></p>
+                    <p id="yaml-url-check-status" class="pm-inline-status"></p>
+                </div>
+
+                <div class="pm-field">
+                    <span class="pm-field-label">Packman status</span>
+                    <div class="pm-radio-group" role="radiogroup" aria-label="Packman status">
+                        <label class="pm-radio-option">
+                            <input type="radio" name="DISABLE_PACKMAN" value="false" checked>
+                            <span>Enabled</span>
+                        </label>
+                        <label class="pm-radio-option">
+                            <input type="radio" name="DISABLE_PACKMAN" value="true">
+                            <span>Disabled — Packman will not manage content</span>
+                        </label>
+                    </div>
+                </div>
+
+                <details class="pm-static-details">
+                    <summary>Fixed configuration (not editable here)</summary>
+                    <dl class="pm-static-list">
+                        <dt>PACKMAN_DIR</dt>
+                        <dd><code id="static-packman-dir"></code></dd>
+                        <dt>PACK_FOLDER</dt>
+                        <dd><code id="static-pack-folder"></code></dd>
+                    </dl>
+                </details>
+
+                <div class="pm-actions">
+                    <button type="submit" id="btn-save-settings" class="pm-btn pm-btn-primary">
+                        Save settings
+                    </button>
+                    <span id="settings-save-status" class="pm-inline-status"></span>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <script src="../base1/cockpit.js"></script>
+    <script src="packman.js"></script>
+</body>
+</html>

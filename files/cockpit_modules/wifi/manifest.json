@@ -1,0 +1,13 @@
+{
+    "version": 0,
+    "requires": {
+        "cockpit": "122"
+    },
+
+    "tools": {
+        "index": {
+            "label": "Wi-Fi",
+            "order": 45
+        }
+    }
+}

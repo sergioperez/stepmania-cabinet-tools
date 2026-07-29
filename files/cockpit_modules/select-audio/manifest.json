@@ -1,0 +1,10 @@
+{
+    "version": 0,
+
+    "tools": {
+        "pinger": {
+            "label": "Sound Device",
+            "path": "itgmania.html"
+        }
+    }
+}

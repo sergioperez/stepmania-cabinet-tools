@@ -38,6 +38,7 @@ common_dependencies:
 - libpulse0
 - mesa-vulkan-drivers
 - firmware-amd-graphics
+- firmware-intel-graphics
 - libxkbcommon-x11-0
 
 extra_packages:
@@ -50,6 +51,18 @@ extra_packages:
 - gvfs
 - polkitd
 - udisks2
+- unzip
+- iwd	# Cockpit wifi module
+- python3-dbus # Cockpit wifi module
+- python3-gi # Cockpit wifi module
+- dbus 		# Cockpit wifi module
+- systemd-resolved # Cockpit wifi module
+- firmware-linux # HW compatibility
+- firmware-linux-free # HW compatibility
+- firmware-linux-nonfree # HW compatibility
+- systemd-resolved # Cockpit wifi + ethernet module
+- psmisc # to have killall
+- sudo
 
 packman_release:
   url:

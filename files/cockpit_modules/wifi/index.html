@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wi-Fi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1>Wi-Fi</h1>
+      <div class="header-actions">
+        <select id="device-select"></select>
+        <label class="switch-label">
+          <input type="checkbox" id="power-toggle">
+          <span>Wi-Fi enabled</span>
+        </label>
+        <button id="scan-btn" class="btn">Scan</button>
+        <button id="hidden-btn" class="btn btn-secondary">Hidden network&hellip;</button>
+      </div>
+    </header>
+
+    <div id="admin-bar" class="admin-bar hidden">
+      Administrative access is required to talk to iwd.
+      <button id="admin-btn" class="btn btn-secondary">Turn on administrative access</button>
+    </div>
+    <div id="status-bar" class="status-bar"></div>
+    <div id="error-bar" class="error-bar hidden"></div>
+
+    <section id="known-section">
+      <h2>Known networks</h2>
+      <ul id="known-list" class="network-list"></ul>
+    </section>
+
+    <section id="available-section">
+      <h2>Available networks</h2>
+      <ul id="network-list" class="network-list"></ul>
+    </section>
+  </div>
+
+  <div id="passphrase-modal" class="modal hidden">
+    <div class="modal-box">
+      <h3 id="passphrase-title">Enter password</h3>
+      <p id="passphrase-desc"></p>
+      <input type="password" id="passphrase-input" autocomplete="off" placeholder="Password">
+      <label class="show-pw-label">
+        <input type="checkbox" id="passphrase-show"> Show password
+      </label>
+      <div id="passphrase-error" class="error hidden"></div>
+      <div class="modal-actions">
+        <button id="passphrase-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="passphrase-connect" class="btn btn-primary">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hidden-modal" class="modal hidden">
+    <div class="modal-box">
+      <h3>Connect to hidden network</h3>
+      <input type="text" id="hidden-ssid-input" autocomplete="off" placeholder="Network name (SSID)">
+      <div id="hidden-error" class="error hidden"></div>
+      <div class="modal-actions">
+        <button id="hidden-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="hidden-connect" class="btn btn-primary">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ipconfig-modal" class="modal hidden">
+    <div class="modal-box ipconfig-box">
+      <h3 id="ipconfig-title">IP settings</h3>
+
+      <div class="ip-section">
+        <h4>IPv4</h4>
+        <p class="ip-note">iwd doesn't support turning IPv4 off entirely for a
+          single network — only automatic (DHCP) vs. manual addressing.</p>
+        <div class="ip-mode-row">
+          <label><input type="radio" name="ipv4-mode" id="ipv4-mode-dhcp" value="dhcp"> Automatic (DHCP)</label>
+          <label><input type="radio" name="ipv4-mode" id="ipv4-mode-static" value="static"> Manual</label>
+        </div>
+        <div id="ipv4-static-fields" class="ip-static-fields hidden">
+          <label class="ip-field-label">Address
+            <input type="text" id="ipv4-address" placeholder="192.168.1.50">
+          </label>
+          <label class="ip-field-label">Netmask
+            <input type="text" id="ipv4-netmask" placeholder="255.255.255.0">
+          </label>
+          <label class="ip-field-label">Gateway
+            <input type="text" id="ipv4-gateway" placeholder="192.168.1.1">
+          </label>
+          <label class="ip-field-label">DNS servers (optional)
+            <input type="text" id="ipv4-dns" placeholder="1.1.1.1 8.8.8.8">
+          </label>
+        </div>
+      </div>
+
+      <div class="ip-section">
+        <h4>IPv6</h4>
+        <div class="ip-mode-row">
+          <label><input type="radio" name="ipv6-enabled" id="ipv6-enabled-true" value="true"> Enabled</label>
+          <label><input type="radio" name="ipv6-enabled" id="ipv6-enabled-false" value="false"> Disabled</label>
+        </div>
+        <div id="ipv6-enabled-fields" class="ip-static-fields hidden">
+          <div class="ip-mode-row">
+            <label><input type="radio" name="ipv6-mode" id="ipv6-mode-dhcp" value="dhcp"> Automatic (SLAAC / DHCPv6)</label>
+            <label><input type="radio" name="ipv6-mode" id="ipv6-mode-static" value="static"> Manual</label>
+          </div>
+          <div id="ipv6-static-fields" class="ip-static-fields hidden">
+            <label class="ip-field-label">Address (with prefix length)
+              <input type="text" id="ipv6-address" placeholder="2001:db8::50/64">
+            </label>
+            <label class="ip-field-label">Gateway
+              <input type="text" id="ipv6-gateway" placeholder="2001:db8::1">
+            </label>
+            <label class="ip-field-label">DNS servers (optional)
+              <input type="text" id="ipv6-dns" placeholder="2001:4860:4860::8888">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="ipconfig-error" class="error hidden"></div>
+      <div class="modal-actions">
+        <button id="ipconfig-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="ipconfig-save" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../base1/cockpit.js"></script>
+  <script src="iwd.js"></script>
+</body>
+</html>
