@@ -47,6 +47,12 @@ After installation, the `stepmania` user will be available to connect over SCP t
 
     - **F2**: Settings WebUI
 
+        - Packman: Manage packs in the host
+
+        - Sound device: Select a sound device for ITGMania/StepMania
+
+        - Ethernet/Wi-Fi: Connect the system to a network
+
     - **F3**: Desktop
 
 **Always** authenticate as the **stepmania** user, and change the password for it and the root user through the WebUI on the first log-in.
