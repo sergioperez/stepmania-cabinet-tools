@@ -41,9 +41,21 @@ After installation, the `stepmania` user will be available to connect over SCP t
 
 - Access the host IP:9090 to admin the host. This is also available locally by pressing **Control+Alt+F2**
 
-- To get a desktop, press **Control+Alt+F3**
+- Press **Control+Alt+Fx** to change the system app, where **Fx** is:
 
-- To return to the game, press **Control+Alt+F1**
+    - **F1**: Game
+
+    - **F2**: Settings WebUI
+
+        - Packman: Manage packs in the host
+
+        - Sound device: Select a sound device for ITGMania/StepMania
+
+        - Ethernet/Wi-Fi: Connect the system to a network
+
+    - **F3**: Desktop
+
+**Always** authenticate as the **stepmania** user, and change the password for it and the root user through the WebUI on the first log-in.
 
 ### Using containers
 
