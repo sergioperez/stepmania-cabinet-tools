@@ -1,0 +1,73 @@
+body {
+    font-family: sans-serif;
+    margin: 1.5em;
+}
+
+.iface-card {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 1em;
+    margin-bottom: 1em;
+    max-width: 32em;
+}
+
+.iface-status, .iface-address {
+    color: #555;
+    margin: 0.2em 0;
+}
+
+.iface-error {
+    color: #a30000;
+    background: #fdecea;
+    border: 1px solid #f5c2c0;
+    border-radius: 4px;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 0.85em;
+    word-break: break-word;
+}
+
+.iface-row {
+    margin: 0.75em 0;
+}
+
+.iface-static-fields label {
+    display: block;
+    margin-top: 0.5em;
+    font-size: 0.9em;
+}
+
+.iface-static-fields input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.3em;
+}
+
+button[type="submit"] {
+    margin-top: 1em;
+    padding: 0.4em 1em;
+}
+
+.family-section {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.75em;
+    margin: 0.75em 0;
+}
+
+.family-section legend {
+    font-weight: bold;
+    padding: 0 0.3em;
+}
+
+.iface-status.status-up {
+    color: #1e7d1e;
+    font-weight: bold;
+}
+
+.iface-status.status-down {
+    color: #a30000;
+    font-weight: bold;
+}

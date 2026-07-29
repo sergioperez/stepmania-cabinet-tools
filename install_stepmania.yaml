@@ -3,10 +3,13 @@
   gather_facts: false
   vars:
     stepmania_release: itgmania-1-3-0
+    #stepmania_release: deadsync-0-5
     arch: x86_64
   tasks:
   - name: Gather all known systemd services
     ansible.builtin.service_facts:
+    tags:
+    - network
 
   - name: Try to disable most common display managers (In case this is not a fresh minimal install)
     ansible.builtin.systemd:
@@ -29,7 +32,9 @@
       name: stepmania
       comment: stepmania game user
       password: "{{ stepmania_password| string | password_hash('sha512') }}"
-      groups: input
+      groups: 
+      - input
+      - netdev
       append: yes
       shell: "/usr/bin/bash"
     tags: user
@@ -120,7 +125,7 @@
 #
 # Install tty_settings and tty_desktop
 #
-  - name: Install tty dependencies
+  - name: Install extra system dependencies
     ansible.builtin.apt:
       name: "{{ extra_packages }}"
       cache_valid_time: 600
@@ -207,7 +212,43 @@
       enabled: true
       state: started
 
-  - name: Enable and start tty-watch and cockpit
+  - name: Upload iwd cockpit plugins
+    ansible.builtin.copy:
+      src: "files/cockpit_modules/{{ item }}"
+      dest: /usr/share/cockpit/
+      owner: root
+      group: root
+      mode: preserve
+    tags:
+    - wifi
+    - cockpit
+    with_items:
+    - select-audio
+    - wifi
+    - ethernet
+    - packman
+
+  - name: Set iwd config
+    ansible.builtin.ini_file:
+      path: /etc/iwd/main.conf
+      section: General
+      option: EnableNetworkConfiguration
+      value: true
+      create: false
+      backup: false
+      no_extra_spaces: true
+    tags: wifi
+
+  - name: DBus rule - allow netdev group to manage wifi
+    ansible.builtin.copy:
+      src: files/cockpit_modules/net.connman.iwd-netdev.conf
+      dest: /etc/dbus-1/system.d/net.connman.iwd-netdev.conf
+      mode: "0644"
+      owner: root
+      group: root
+    tags: wifi
+
+  - name: Enable and start required systemd units
     ansible.builtin.systemd:
       name: "{{ item }}"
       enabled: true
@@ -215,6 +256,34 @@
     with_items:
     - tty-watch.path
     - cockpit.service
+    - systemd-networkd
+    - systemd-resolved
+    tags:
+    - cockpit
+    - network
+
+  - name: Disable network managers
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      enabled: false
+      masked: true
+      state: stopped
+    when: item in ansible_facts.services
+    with_items:
+    - networking
+    - NetworkManager
+    ignore_errors: true
+    tags:
+    - network 
+
+  - name: Add stepmania user to sudoers
+    community.general.sudoers:
+      name: stepmania
+      user: stepmania
+      commands: ALL
+      nopassword: false
+    tags:
+    - sudo
 
   - name: Restart polkit
     ansible.builtin.systemd:

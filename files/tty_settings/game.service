@@ -19,6 +19,8 @@ UtmpMode=user
 ExecStart=/usr/bin/xinit /home/stepmania/run_game.sh -- vt1 -nocursor
 Restart=always
 RestartSec=3
+StartLimitIntervalSec=10
+StartLimitBurst=2
 
 [Install]
 WantedBy=graphical.target
