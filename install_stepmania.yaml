@@ -2,8 +2,9 @@
   hosts: all
   gather_facts: false
   vars:
-    stepmania_release: itgmania-1-3-0
-    #stepmania_release: deadsync-0-5
+    default_game: itgmania-1-3-0
+    installed_games:
+    - itgmania-1-2-1
     arch: x86_64
   tasks:
   - name: Gather all known systemd services
@@ -41,11 +42,31 @@
 
   - name: Create game directory
     ansible.builtin.file:
-      path: "{{ stepmania_releases[stepmania_release].dest }}"
+      path: "{{ stepmania_releases[item].dest }}"
       state: directory
       owner: stepmania
       group: stepmania
     tags: download
+    with_items: "{{ installed_games }}"
+
+  - name: Download game
+    ansible.builtin.unarchive:
+      src: "{{ stepmania_releases[item].url[arch] }}"
+      remote_src: yes
+      dest: "{{ stepmania_releases[item].dest }}"
+      creates: "{{ stepmania_releases[item].binary_path }}"
+      extra_opts: "{{ stepmania_releases[item].extract_opts }}"
+      owner: stepmania
+      group: stepmania
+    tags: download
+    with_items: "{{ installed_games }}"
+
+  - name: Ensure portable.txt does not exist
+    ansible.builtin.file:
+      path: "{{ stepmania_releases[item].dest }}/portable.txt"
+      state: absent
+    tags: download
+    with_items: "{{ installed_games }}"
 
   # All the addons (audio device picker) will set configurations
   # for all the supported games
@@ -63,7 +84,7 @@
 
   - name: Ensure AdditionalSongFoldersReadOnly is set in itgmania Preferences.ini
     ansible.builtin.ini_file:
-      path: "/home/stepmania/{{ item }}"
+      path: "{{ stepmania_releases[item].config_file }}"
       section: Options
       option: AdditionalSongFoldersReadOnly
       value: /home/stepmania/songs
@@ -73,31 +94,13 @@
       create: true
       backup: true
       no_extra_spaces: true
-    with_items:
-    - ".itgmania/Save/Preferences.ini"
-    - ".local/share/deadsync/deadsync.ini"
-
-
-  - name: Download StepMania
-    ansible.builtin.unarchive:
-      src: "{{ stepmania_releases[stepmania_release].url[arch] }}"
-      remote_src: yes
-      dest: "{{ stepmania_releases[stepmania_release].dest }}"
-      creates: "{{ stepmania_releases[stepmania_release].binary_path }}"
-      extra_opts: "{{ stepmania_releases[stepmania_release].extract_opts }}"
-      owner: stepmania
-      group: stepmania
-    tags: download
+    with_items: "{{ installed_games }}"
 
   - name: Install dependencies
     ansible.builtin.apt:
-      name: "{{ common_dependencies + stepmania_releases[stepmania_release].dependencies }}"
+      name: "{{ common_dependencies + stepmania_releases[item].dependencies }}"
       cache_valid_time: 600
-
-  - name: Create game directory
-    ansible.builtin.file:
-      path: "{{ stepmania_releases[stepmania_release].dest }}"
-      state: directory
+    with_items: "{{ installed_games }}"
 
   - name: Create file that defines which game will be executed
     ansible.builtin.copy:
@@ -105,7 +108,7 @@
        owner: stepmania 
        group: stepmania
        mode: '0644'
-       content: "nice -n 1 {{ stepmania_releases[stepmania_release].binary_path }}"
+       content: "{{ stepmania_releases[default_game].binary_path }}"
 
   - name: Set GRUB configuration (usbhid - polling rate)
     ansible.builtin.copy:
@@ -227,6 +230,7 @@
     - wifi
     - ethernet
     - packman
+    - select-game
 
   - name: Set iwd config
     ansible.builtin.ini_file:
