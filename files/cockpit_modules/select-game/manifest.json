@@ -1,0 +1,11 @@
+{
+    "requires": {
+        "cockpit": "122"
+    },
+
+    "tools": {
+        "index": {
+            "label": "Game"
+        }
+    }
+}

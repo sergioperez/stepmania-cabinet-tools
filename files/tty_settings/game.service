@@ -21,6 +21,7 @@ Restart=always
 RestartSec=3
 StartLimitIntervalSec=10
 StartLimitBurst=2
+Nice=-1
 
 [Install]
 WantedBy=graphical.target
