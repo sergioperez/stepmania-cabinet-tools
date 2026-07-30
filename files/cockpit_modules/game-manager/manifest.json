@@ -6,8 +6,8 @@
 
     "tools": {
         "index": {
-            "label": "Wi-Fi",
-            "order": 210
+            "label": "Game Manager",
+            "order": 200
         }
     }
 }

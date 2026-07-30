@@ -7,7 +7,7 @@
     "tools": {
         "index": {
             "label": "Ethernet",
-            "order": 51
+            "order": 240
         }
     }
 }

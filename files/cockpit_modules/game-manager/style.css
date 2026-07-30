@@ -1,0 +1,229 @@
+:root {
+    --gd-blue: #0066cc;
+    --gd-blue-dark: #004080;
+    --gd-green: #3e8635;
+    --gd-red: #c9190b;
+    --gd-gray-100: #f5f5f5;
+    --gd-gray-200: #e0e0e0;
+    --gd-gray-500: #6a6e73;
+    --gd-gray-900: #151515;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "RedHatText", "Overpass", Helvetica, Arial, sans-serif;
+    background: #fff;
+    color: var(--gd-gray-900);
+}
+
+.gd-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+}
+
+.gd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.gd-header h1 {
+    font-size: 22px;
+    margin: 0;
+}
+
+.gd-status {
+    min-height: 20px;
+    margin-bottom: 12px;
+    color: var(--gd-gray-500);
+    font-size: 14px;
+}
+
+.gd-status-error {
+    color: var(--gd-red);
+}
+
+.gd-empty {
+    color: var(--gd-gray-500);
+    font-size: 14px;
+}
+
+.gd-section {
+    margin-bottom: 28px;
+}
+
+.gd-section:last-child {
+    margin-bottom: 0;
+}
+
+.gd-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gd-gray-500);
+    margin: 0 0 10px;
+}
+
+.gd-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gd-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--gd-gray-200);
+    border-radius: 6px;
+    background: var(--gd-gray-100);
+}
+
+.gd-row-clickable {
+    cursor: pointer;
+}
+
+.gd-row-clickable:hover {
+    background: #eef2f7;
+}
+
+.gd-row-current {
+    border-color: var(--gd-blue);
+    background: rgba(0, 102, 204, 0.06);
+}
+
+.gd-row-current.gd-row-clickable:hover {
+    background: rgba(0, 102, 204, 0.1);
+}
+
+.gd-name {
+    flex: 1 1 auto;
+    font-weight: 600;
+    font-size: 15px;
+    word-break: break-word;
+}
+
+.gd-name-current {
+    color: var(--gd-blue);
+}
+
+.gd-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.gd-current-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    color: #fff;
+    background: var(--gd-blue);
+}
+
+.gd-action {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    padding: 7px 14px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.gd-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gd-btn-primary {
+    background: var(--gd-blue);
+    color: #fff;
+}
+
+.gd-btn-primary:not(:disabled):hover {
+    background: var(--gd-blue-dark);
+}
+
+.gd-btn-secondary {
+    background: #fff;
+    border-color: var(--gd-gray-200);
+    color: var(--gd-gray-900);
+}
+
+.gd-btn-secondary:not(:disabled):hover {
+    background: var(--gd-gray-100);
+}
+
+.gd-btn-plain {
+    background: transparent;
+    color: var(--gd-blue);
+    padding: 4px 8px;
+}
+
+.gd-btn-danger {
+    background: #fff;
+    border-color: var(--gd-gray-200);
+    color: var(--gd-red);
+    padding: 7px 10px;
+}
+
+.gd-btn-danger:not(:disabled):hover {
+    background: rgba(201, 25, 11, 0.08);
+    border-color: var(--gd-red);
+}
+
+.gd-icon {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    flex: none;
+}
+
+.gd-terminal-panel {
+    margin-top: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--gd-gray-200);
+}
+
+.gd-terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #2b2e33;
+    color: #f0f0f0;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.gd-terminal {
+    margin: 0;
+    background: #151515;
+    color: #d6d6d6;
+    padding: 12px;
+    font-family: "Menlo", "Consolas", monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    max-height: 320px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}

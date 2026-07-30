@@ -66,6 +66,8 @@ extra_packages:
 - systemd-resolved # Cockpit wifi + ethernet module
 - psmisc # to have killall
 - sudo
+- curl
+- yq
 
 packman_release:
   url:
@@ -73,3 +75,5 @@ packman_release:
     x86_64: "https://github.com/sergioperez/stepmania-packman/releases/download/20260718/packman-amd64-20260718-97b3610"
     riscv64: "https://github.com/sergioperez/stepmania-packman/releases/download/20260718/packman-riscv64-20260718-97b3610"
   binary_path: "/usr/local/bin/packman"
+
+tested_debian_release: trixie
