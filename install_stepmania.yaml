@@ -42,7 +42,7 @@
 
   - name: Create game directory
     ansible.builtin.file:
-      path: "{{ stepmania_releases[item].dest }}"
+      path: "{{ game_releases[item].dest }}"
       state: directory
       owner: stepmania
       group: stepmania
@@ -51,11 +51,11 @@
 
   - name: Download game
     ansible.builtin.unarchive:
-      src: "{{ stepmania_releases[item].url[arch] }}"
+      src: "{{ game_releases[item].url[arch] }}"
       remote_src: yes
-      dest: "{{ stepmania_releases[item].dest }}"
-      creates: "{{ stepmania_releases[item].binary_path }}"
-      extra_opts: "{{ stepmania_releases[item].extract_opts }}"
+      dest: "{{ game_releases[item].dest }}"
+      creates: "{{ game_releases[item].binary_path }}"
+      extra_opts: "{{ game_releases[item].extract_opts }}"
       owner: stepmania
       group: stepmania
     tags: download
@@ -63,7 +63,7 @@
 
   - name: Ensure portable.txt does not exist
     ansible.builtin.file:
-      path: "{{ stepmania_releases[item].dest }}/portable.txt"
+      path: "{{ game_releases[item].dest }}/portable.txt"
       state: absent
     tags: download
     with_items: "{{ installed_games }}"
@@ -84,7 +84,7 @@
 
   - name: Ensure AdditionalSongFoldersReadOnly is set in itgmania Preferences.ini
     ansible.builtin.ini_file:
-      path: "{{ stepmania_releases[item].config_file }}"
+      path: "{{ game_releases[item].config_file }}"
       section: Options
       option: AdditionalSongFoldersReadOnly
       value: /home/stepmania/songs
@@ -98,7 +98,7 @@
 
   - name: Install dependencies
     ansible.builtin.apt:
-      name: "{{ common_dependencies + stepmania_releases[item].dependencies }}"
+      name: "{{ common_dependencies + game_releases[item].dependencies }}"
       cache_valid_time: 600
     with_items: "{{ installed_games }}"
 
@@ -108,7 +108,7 @@
        owner: stepmania 
        group: stepmania
        mode: '0644'
-       content: "{{ stepmania_releases[default_game].binary_path }}"
+       content: "{{ game_releases[default_game].binary_path }}"
 
   - name: Set GRUB configuration (usbhid - polling rate)
     ansible.builtin.copy:

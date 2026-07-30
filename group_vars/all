@@ -1,4 +1,4 @@
-stepmania_releases:
+game_releases:
   deadsync-0-5-120:
     url:
       x86_64: "https://github.com/pnn64/deadsync/releases/download/v0.5.120/deadsync-v0.5.120-x86_64-linux.tar.gz"
