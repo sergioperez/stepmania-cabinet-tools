@@ -1,11 +1,13 @@
 {
+    "version": 0,
     "requires": {
         "cockpit": "122"
     },
 
     "tools": {
         "index": {
-            "label": "Game select"
+            "label": "Pack Manager",
+            "order": 80
         }
     }
 }

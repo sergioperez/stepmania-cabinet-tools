@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Game Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="gd-page">
+        <header class="gd-header">
+            <h1>Game Manager</h1>
+            <button id="refresh-btn" class="gd-btn gd-btn-secondary" title="Reload the release list">
+                <svg class="gd-icon" viewBox="0 0 16 16">
+                    <path d="M13.65 2.35a7.95 7.95 0 0 0-11.3 0 7.95 7.95 0 0 0-2.2 4.15h1.53a6.48 6.48 0 0 1 1.68-3.04 6.5 6.5 0 1 1 1.9 10.5l1.06-1.06a5 5 0 1 0-1.4-8.14L6.9 6.24H2V1.34l1.72 1.72a7.95 7.95 0 0 1 9.93-.71z"/>
+                </svg>
+                Refresh
+            </button>
+        </header>
+
+        <div id="status-bar" class="gd-status"></div>
+
+        <div class="gd-section">
+            <h2 class="gd-section-title">Installed games</h2>
+            <div id="installed-list" class="gd-list"></div>
+            <p id="installed-empty" class="gd-empty" hidden></p>
+        </div>
+
+        <div id="available-section" class="gd-section" hidden>
+            <h2 class="gd-section-title">Available to install</h2>
+            <div id="available-list" class="gd-list"></div>
+        </div>
+
+        <div id="terminal-panel" class="gd-terminal-panel" hidden>
+            <div class="gd-terminal-header">
+                <span id="terminal-title">Downloading…</span>
+                <button id="terminal-close" class="gd-btn gd-btn-plain" hidden>Close</button>
+            </div>
+            <pre id="terminal-output" class="gd-terminal"></pre>
+        </div>
+    </div>
+
+    <script src="../base1/cockpit.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

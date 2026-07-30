@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Debian Update</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div class="page">
+  <h1>Debian Update</h1>
+
+  <div class="card">
+    <div class="card-header">Current system</div>
+    <div class="card-body">
+      <div id="system-info" class="kv">Loading…</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Updates</div>
+    <div class="card-body">
+      <div class="button-row">
+        <button id="btn-check" class="btn btn-secondary">Check for updates</button>
+        <button id="btn-update" class="btn btn-primary" disabled>Update now</button>
+      </div>
+      <div id="update-status" class="status-line"></div>
+      <div id="keptback-row" class="keptback-row hidden">
+        <span id="keptback-text"></span>
+        <button id="btn-install-keptback" class="btn btn-secondary btn-small">Install kept-back packages</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="release-card">
+    <div class="card-header">Release upgrade</div>
+    <div class="card-body">
+      <p id="release-info"></p>
+      <div class="button-row">
+        <button id="btn-release-upgrade" class="btn btn-danger">Upgrade now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="reboot-card">
+    <div class="card-body reboot-body">
+      <span>A reboot is recommended to finish applying updates.</span>
+      <button id="btn-reboot" class="btn btn-danger">Reboot now</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Output</div>
+    <div class="card-body">
+      <pre id="output" class="terminal"></pre>
+    </div>
+  </div>
+</div>
+
+<script src="../base1/cockpit.js"></script>
+<script src="update.js"></script>
+</body>
+</html>

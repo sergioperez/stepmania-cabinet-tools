@@ -4,7 +4,8 @@
     "tools": {
         "pinger": {
             "label": "Sound Device",
-            "path": "itgmania.html"
+            "path": "itgmania.html",
+            "order": 200
         }
     }
 }
