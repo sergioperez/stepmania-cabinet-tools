@@ -5,4 +5,4 @@
 #192.168.122.7 stepmania_password=12345678 ansible_user=root ansible_password=12345678 ansible_become=true
 
 # For packman:
-192.168.122.53 stepmania_password=1234 ansible_user=root ansible_password=1234 ansible_become=true packman_dir=/home/stepmania/packman sm_pack_search_url="https://stepmaniaonline.net" arch=x86_64
+192.168.122.53 stepmania_password=1234 ansible_user=root ansible_password=1234 ansible_become=true packman_dir=/home/stepmania/packman sm_pack_search_url="https://stepmaniaoffline.lan" arch=x86_64
