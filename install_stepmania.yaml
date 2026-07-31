@@ -127,6 +127,12 @@
        mode: '0644'
        content: "{{ game_releases[default_game].binary_path }}"
 
+  - name: Check if update-grub is available
+    ansible.builtin.stat:
+      path: /usr/sbin/update-grub
+    register: _update_grub_bin
+    tags: grub
+
   - name: Set GRUB configuration (usbhid - polling rate)
     ansible.builtin.copy:
       src: files/grub.cfg
@@ -135,6 +141,7 @@
       owner: root
       group: root
     register: _grub_config
+    when: _update_grub_bin.stat.exists
     tags: grub
 
   - name: Update grub
