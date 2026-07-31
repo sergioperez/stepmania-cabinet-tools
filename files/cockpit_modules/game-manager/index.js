@@ -369,6 +369,7 @@
             "mkdir -p " + shQuote(dest),
             "curl -fL --progress-bar -o " + shQuote(tmpFile) + " " + shQuote(url),
             "tar -xf " + shQuote(tmpFile) + " -C " + shQuote(dest) + (extractOpts ? " " + extractOpts : ""),
+            "find " + shQuote(dest) + " -maxdepth 1 -type f -iname 'portable.txt' -delete",
             "rm -f " + shQuote(tmpFile),
             "echo",
             "echo 'Done.'"
