@@ -25,6 +25,13 @@ const DPKG_UNATTENDED_OPTS = [
     "-o", "Dpkg::Options::=--force-confold"
 ];
 
+// group_vars/all from the cabinet-tools repo carries a tested_debian_release
+// key. When the host is already on that release, the release-upgrade card
+// is suppressed entirely (this manifest is always pulled live, never
+// bundled, so the check reflects whatever the tooling currently supports).
+const TESTED_RELEASE_MANIFEST_URL =
+    "https://raw.githubusercontent.com/sergioperez/stepmania-cabinet-tools/refs/heads/release/group_vars/all";
+
 let current_codename = null;
 let current_suite = null;
 
@@ -159,8 +166,8 @@ function load_system_info() {
                 .then(policy_text => {
                     current_suite = detect_suite(policy_text, current_codename);
                     render_system_info(os_release, current_suite);
-                    update_release_card();
                     btn_update.disabled = false;
+                    return update_release_card();
                 })
                 .catch(() => {
                     render_system_info(os_release, null);
@@ -170,6 +177,19 @@ function load_system_info() {
         })
         .catch(ex => {
             system_info_el.textContent = "Could not read /etc/os-release: " + ex;
+        });
+}
+
+// Fetches group_vars/all live and pulls out the tested_debian_release value
+// (a plain or quoted YAML scalar, e.g. `tested_debian_release: trixie`).
+// Resolves to null if the key isn't present; rejects if the manifest
+// couldn't be fetched at all.
+function fetch_tested_debian_release() {
+    return cockpit.spawn(["curl", "--max-time", "10", "-fsSL", TESTED_RELEASE_MANIFEST_URL],
+        { err: "message" })
+        .then(text => {
+            const m = text.match(/^\s*tested_debian_release:\s*["']?([\w.-]+)/m);
+            return m ? m[1] : null;
         });
 }
 
@@ -185,28 +205,50 @@ function fetch_new_stable_codename() {
 function update_release_card() {
     if (current_suite !== "oldstable") {
         release_card_el.classList.add("hidden");
-        return;
+        return Promise.resolve();
     }
 
-    release_info_el.textContent = "This system is on \"" + current_codename +
-        "\", which is now oldstable. Checking the new stable release…";
+    // Disabled-by-default until we've positively confirmed it's safe to
+    // offer: the checks below either re-enable it or hide the card.
+    btn_release_upgrade.disabled = true;
+    delete btn_release_upgrade.dataset.target;
     release_card_el.classList.remove("hidden");
+    release_info_el.textContent = "This system is on \"" + current_codename +
+        "\", which is now oldstable. Checking release status…";
 
-    fetch_new_stable_codename().then(new_codename => {
-        if (!new_codename) {
-            release_info_el.textContent = "This system is on \"" + current_codename +
-                "\" (oldstable), but the current stable codename could not be determined right now.";
-            btn_release_upgrade.disabled = true;
+    return fetch_tested_debian_release().then(tested_release => {
+        if (tested_release && tested_release === current_codename) {
+            // The cabinet-tools manifest still pins this release; don't
+            // offer to move past it until the manifest itself moves on.
+            release_card_el.classList.add("hidden");
             return;
         }
-        btn_release_upgrade.dataset.target = new_codename;
-        release_info_el.textContent = "This system is on \"" + current_codename +
-            "\" (oldstable). Debian \"" + new_codename + "\" is now stable. " +
-            "Upgrading will repoint apt sources from \"" + current_codename + "\" to \"" +
-            new_codename + "\", run a full upgrade, and recommend a reboot.";
+
+        return fetch_new_stable_codename().then(new_codename => {
+            if (!new_codename) {
+                release_info_el.textContent = "This system is on \"" + current_codename +
+                    "\" (oldstable), but the current stable codename could not be determined right now.";
+                btn_release_upgrade.disabled = true;
+                return;
+            }
+            btn_release_upgrade.dataset.target = new_codename;
+            btn_release_upgrade.disabled = false;
+            release_info_el.textContent = "This system is on \"" + current_codename +
+                "\" (oldstable). Debian \"" + new_codename + "\" is now stable. " +
+                "Upgrading will repoint apt sources from \"" + current_codename + "\" to \"" +
+                new_codename + "\", run a full upgrade, and recommend a reboot.";
+        }).catch(ex => {
+            release_info_el.textContent = "This system is on \"" + current_codename +
+                "\" (oldstable), but the current stable codename could not be determined (" + ex + ").";
+            btn_release_upgrade.disabled = true;
+        });
     }).catch(ex => {
+        // The tested-release manifest must always be pulled live, and if it
+        // can't be reached we can't confirm this release isn't pinned —
+        // so the release upgrade stays disallowed rather than defaulting open.
         release_info_el.textContent = "This system is on \"" + current_codename +
-            "\" (oldstable), but the current stable codename could not be determined (" + ex + ").";
+            "\" (oldstable), but the tested-release manifest could not be reached (" + ex +
+            "). Release upgrade is disabled until it can be checked.";
         btn_release_upgrade.disabled = true;
     });
 }
@@ -253,7 +295,7 @@ btn_check.addEventListener("click", () => {
         })
         .then(text => {
             render_system_info(parse_os_release(text), current_suite);
-            update_release_card();
+            return update_release_card();
         })
         .catch(ex => set_status("Check failed: " + ex, true))
         .finally(() => set_busy(false));
