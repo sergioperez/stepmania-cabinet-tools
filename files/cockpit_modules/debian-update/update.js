@@ -11,6 +11,8 @@ const btn_check = document.getElementById("btn-check");
 const btn_update = document.getElementById("btn-update");
 const btn_release_upgrade = document.getElementById("btn-release-upgrade");
 const btn_reboot = document.getElementById("btn-reboot");
+const btn_update_plugins = document.getElementById("btn-update-plugins");
+const plugins_status_el = document.getElementById("plugins-status");
 
 const keptback_row_el = document.getElementById("keptback-row");
 const keptback_text_el = document.getElementById("keptback-text");
@@ -32,6 +34,12 @@ const DPKG_UNATTENDED_OPTS = [
 const TESTED_RELEASE_MANIFEST_URL =
     "https://raw.githubusercontent.com/sergioperez/stepmania-cabinet-tools/refs/heads/release/group_vars/all";
 
+// Archive of the same repo's release branch, used by "Update plugins" to
+// (re)install the Cockpit modules it ships under files/cockpit_modules
+// (or files/cockpit-modules) into /usr/share/cockpit/.
+const PLUGINS_ARCHIVE_URL =
+    "https://github.com/sergioperez/stepmania-cabinet-tools/archive/refs/heads/release.zip";
+
 let current_codename = null;
 let current_suite = null;
 
@@ -49,6 +57,16 @@ function require_admin() {
     return true;
 }
 
+// Unlike the other buttons (which only check on click), "Update plugins"
+// overwrites live files under /usr/share/cockpit/, so it stays disabled in
+// the UI until admin_permission has positively resolved to true - not just
+// on click, but structurally unclickable without administrative access.
+let is_busy = false;
+function refresh_plugins_button() {
+    btn_update_plugins.disabled = is_busy || admin_permission.allowed !== true;
+}
+admin_permission.addEventListener("changed", refresh_plugins_button);
+
 function log(text) {
     output_el.textContent += text;
     output_el.scrollTop = output_el.scrollHeight;
@@ -62,17 +80,20 @@ function clear_log() {
     output_el.textContent = "";
 }
 
-function set_status(text, is_error) {
-    update_status_el.textContent = text || "";
-    update_status_el.classList.toggle("error", !!is_error);
+function set_status(text, is_error, el) {
+    el = el || update_status_el;
+    el.textContent = text || "";
+    el.classList.toggle("error", !!is_error);
 }
 
 function set_busy(busy) {
+    is_busy = busy;
     btn_check.disabled = busy;
     btn_update.disabled = busy || !current_codename;
     btn_release_upgrade.disabled = busy;
     btn_reboot.disabled = busy;
     btn_install_keptback.disabled = busy;
+    refresh_plugins_button();
 }
 
 function show_keptback(pkgs) {
@@ -395,6 +416,51 @@ btn_reboot.addEventListener("click", () => {
         return;
     cockpit.spawn(["reboot"], { superuser: "require" })
         .catch(ex => set_status("Reboot failed: " + ex, true));
+});
+
+btn_update_plugins.addEventListener("click", () => {
+    if (!require_admin())
+        return;
+    if (!window.confirm("Download stepmania-cabinet-tools (release branch) and overwrite matching " +
+        "module directories under /usr/share/cockpit/? Continue?"))
+        return;
+
+    set_busy(true);
+    clear_log();
+    set_status("Updating Cockpit plugins…", false, plugins_status_el);
+
+    // Downloads the release-branch archive, extracts it with unzip, and
+    // copies every directory found under files/cockpit_modules (or
+    // files/cockpit-modules) into /usr/share/cockpit/, overwriting any
+    // existing module of the same name.
+    const script =
+        "set -e; " +
+        "tmp=$(mktemp -d); " +
+        "trap 'rm -rf \"$tmp\"' EXIT; " +
+        "curl --max-time 60 -fsSL '" + PLUGINS_ARCHIVE_URL + "' -o \"$tmp/repo.zip\"; " +
+        "mkdir \"$tmp/extracted\"; " +
+        "unzip -q \"$tmp/repo.zip\" -d \"$tmp/extracted\"; " +
+        "root=$(find \"$tmp/extracted\" -mindepth 1 -maxdepth 1 -type d | head -n1); " +
+        "if [ -z \"$root\" ]; then echo 'Archive did not extract to a directory' >&2; exit 1; fi; " +
+        "modules=\"\"; " +
+        "for c in \"$root/files/cockpit_modules\" \"$root/files/cockpit-modules\"; do " +
+        "  [ -d \"$c\" ] && modules=\"$c\" && break; " +
+        "done; " +
+        "if [ -z \"$modules\" ]; then " +
+        "  echo 'No files/cockpit_modules or files/cockpit-modules directory found in archive' >&2; exit 1; " +
+        "fi; " +
+        "for d in \"$modules\"/*/; do " +
+        "  name=$(basename \"$d\"); " +
+        "  echo \"Installing module: $name\"; " +
+        "  rm -rf \"/usr/share/cockpit/$name\"; " +
+        "  cp -a \"$d\" \"/usr/share/cockpit/$name\"; " +
+        "done";
+
+    run_step(["bash", "-c", script])
+        .then(() => set_status("Cockpit plugins updated. Reload the page to pick up any changes.",
+            false, plugins_status_el))
+        .catch(ex => set_status("Plugin update failed: " + ex, true, plugins_status_el))
+        .finally(() => set_busy(false));
 });
 
 set_busy(false);
