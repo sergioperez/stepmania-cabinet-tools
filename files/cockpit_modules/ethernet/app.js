@@ -1,5 +1,16 @@
 import { listEthernetInterfaces, getInterfaceState, applyInterfaceConfig, watchInterface } from './networkd-backend.js';
 
+// `cockpit` is a global, provided by <script src="../base1/cockpit.js">
+// in index.html. Note: cockpit.superuser (allowed/changed) belongs to a
+// separate "superuser.js" helper library some Cockpit projects pull in
+// additionally - it is NOT guaranteed to exist from cockpit.js alone.
+// cockpit.permission() is the API that's actually part of the core
+// cockpit.js this plugin loads, so that's what we use here. .allowed is
+// `null` until the permission check resolves asynchronously - treated
+// as "not admin yet" (button stays disabled) until it settles one way
+// or the other via the "changed" event.
+const adminPermission = cockpit.permission({ admin: true });
+
 function el(tag, attrs = {}, children = []) {
     const node = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
@@ -140,15 +151,28 @@ function buildInterfacePanel(iface) {
 
     const applyButton = el('button', { type: 'submit', text: 'Apply', disabled: 'disabled' });
     form.appendChild(applyButton);
+    const adminNote = el('p', { class: 'admin-note', text: 'Administrative access is required to change network settings.', style: 'display:none' });
+    form.appendChild(adminNote);
 
     let current = null;
     let stopWatching = null;
 
-    function checkDirty() {
+    function updateApplyButtonState() {
+        const isAdmin = adminPermission.allowed === true; // null (unresolved) or false both mean "not yet allowed"
+        adminNote.style.display = isAdmin ? 'none' : '';
+        if (!isAdmin) {
+            applyButton.disabled = true;
+            return;
+        }
         if (!current) return;
         applyButton.disabled = !(v4.isDirty(current.ipv4) || v6.isDirty(current.ipv6));
     }
+    const checkDirty = updateApplyButtonState;
     [...v4.inputs, ...v6.inputs].forEach(input => input.addEventListener('input', checkDirty));
+
+    // Re-evaluate once the permission check resolves, and again if the
+    // user toggles Cockpit's "Administrative access" mid-session.
+    adminPermission.addEventListener('changed', updateApplyButtonState);
 
     /**
      * Collapse networkd's three separate state properties into one plain
@@ -183,7 +207,7 @@ function buildInterfacePanel(iface) {
         addressLine.textContent =
             `Current: IPv4 ${current.liveAddresses.v4 || 'none'} | IPv6 ${current.liveAddresses.v6 || 'none'}`;
         renderLiveStatus(current);
-        applyButton.disabled = true;
+        updateApplyButtonState();
 
         if (stopWatching) stopWatching();
         try {

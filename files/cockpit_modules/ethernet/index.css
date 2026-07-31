@@ -71,3 +71,10 @@ button[type="submit"] {
     color: #a30000;
     font-weight: bold;
 }
+
+.admin-note {
+    color: #777;
+    font-size: 0.85em;
+    font-style: italic;
+    margin-top: 0.4em;
+}
