@@ -7,9 +7,6 @@
     pack_folder: "/home/stepmania/songs"
     pack_yaml_url: ""
     disable_packman: false
-
-    arch: x86_64
-
   pre_tasks:
     - name: Fail if required variables are not defined
       ansible.builtin.assert:
@@ -19,6 +16,24 @@
         fail_msg: "packman_dir and sm_pack_search_url must be defined in inventory."
         quiet: true
   tasks:
+    - name: Detect architecture
+      ansible.builtin.command: uname -m
+      register: arch_result
+      changed_when: false
+      when: arch is not defined
+
+    - name: Select architecture
+      ansible.builtin.set_fact:
+        arch: "{{ arch_map[arch_result.stdout] | default('x86_64') }}"
+      vars:
+        arch_map:
+          x86_64: x86_64
+          amd64: x86_64
+          aarch64: arm64
+          arm64: arm64
+          riscv64: riscv64
+      when: arch is not defined
+
     - name: Download packman binary into /usr/local/bin
       ansible.builtin.get_url:
         url: "{{ packman_release.url[arch] }}"
