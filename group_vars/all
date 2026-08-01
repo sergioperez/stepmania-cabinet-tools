@@ -3,6 +3,7 @@ game_releases:
     url:
       x86_64: "https://github.com/pnn64/deadsync/releases/download/v0.5.120/deadsync-v0.5.120-x86_64-linux.tar.gz"
       arm64: "https://github.com/pnn64/deadsync/releases/download/v0.5.120/deadsync-v0.5.120-arm64-linux.tar.gz"
+      riscv64: "https://github.com/pnn64/deadsync/releases/download/v0.5.120/deadsync-v0.5.120-x86_64-linux.tar.gz"
     dest: "/home/stepmania/game/deadsync0-5-120"
     config_file: "/home/stepmania/.local/share/deadsync/deadsync.ini"
     binary_path: "/home/stepmania/game/deadsync0-5-120/deadsync"
@@ -37,12 +38,17 @@ common_dependencies:
 - libvorbis0a
 - libasound2
 - alsa-utils
-- xorg
+- xserver-xorg-core
+- xinit
 - libpulse0
 - mesa-vulkan-drivers
 - firmware-amd-graphics
 - firmware-intel-graphics
 - libxkbcommon-x11-0
+
+network_dependencies:
+- iwd
+- systemd-resolved
 
 extra_packages:
 - jwm
@@ -59,11 +65,9 @@ extra_packages:
 - python3-dbus # Cockpit wifi module
 - python3-gi # Cockpit wifi module
 - dbus 		# Cockpit wifi module
-- systemd-resolved # Cockpit wifi module
 - firmware-linux # HW compatibility
 - firmware-linux-free # HW compatibility
 - firmware-linux-nonfree # HW compatibility
-- systemd-resolved # Cockpit wifi + ethernet module
 - psmisc # to have killall
 - sudo
 - curl

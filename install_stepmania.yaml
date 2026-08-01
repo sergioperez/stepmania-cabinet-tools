@@ -119,6 +119,21 @@
       cache_valid_time: 600
     with_items: "{{ installed_games }}"
 
+  # Harmless files for all platforms
+  # but fixing for some (as rpi5)
+  - name: Copy platform fixes
+    ansible.builtin.copy:
+       src: "{{ item.file }}"
+       dest: "{{ item.destination }}"
+       owner: stepmania
+       group: stepmania
+       mode: '0644'
+    with_items:
+    - file: files/misc/99-rpi5-xorg-fix.conf
+      destination: /etc/X11/xorg.conf.d/99-rpi5-xorg-fix.conf
+    tags:
+    - fixes
+
   - name: Create file that defines which game will be executed
     ansible.builtin.copy:
        dest: /home/stepmania/run_game.sh
@@ -277,6 +292,13 @@
       group: root
     tags: wifi
 
+  # Done in a later stage in case any issues occur
+  - name: Install network dependencies
+    ansible.builtin.apt:
+      name: "{{ network_dependencies }}"
+      cache_valid_time: 600
+    with_items: "{{ installed_games }}"
+
   - name: Enable and start required systemd units
     ansible.builtin.systemd:
       name: "{{ item }}"
@@ -291,7 +313,7 @@
     - cockpit
     - network
 
-  - name: Disable other network managers and systemd-networkd-wait-online
+  - name: Disable other not-needed services
     ansible.builtin.systemd:
       name: "{{ item }}"
       enabled: false
@@ -299,9 +321,11 @@
       state: stopped
     when: item in ansible_facts.services
     with_items:
-    - networking
-    - NetworkManager
-    - systemd-networkd-wait-online
+    - networking.service
+    - NetworkManager.service
+    - systemd-networkd-wait-online.service
+    - cloud-init.target
+    - wpa_supplicant.service
     ignore_errors: true
     tags:
     - network 
@@ -319,3 +343,6 @@
     ansible.builtin.systemd:
       name: polkit
       state: restarted
+
+  - name: Set default to graphical target
+    ansible.builtin.command: "systemctl set-default graphical.target"
