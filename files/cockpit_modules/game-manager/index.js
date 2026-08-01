@@ -24,6 +24,7 @@
     const availableListEl = document.getElementById("available-list");
     const statusEl = document.getElementById("status-bar");
     const refreshBtn = document.getElementById("refresh-btn");
+    const restartBtn = document.getElementById("restart-btn");
     const termPanel = document.getElementById("terminal-panel");
     const termTitle = document.getElementById("terminal-title");
     const termOutput = document.getElementById("terminal-output");
@@ -538,6 +539,24 @@
         render();
         refreshBtn.disabled = false;
     }
+
+    // --- restart game ---
+
+    function restartGame() {
+        restartBtn.disabled = true;
+        setStatus("Restarting game\u2026");
+        cockpit.spawn(["sudo", "systemctl", "restart", "game"], { err: "message" })
+            .then(() => {
+                setStatus("Game restarted.");
+                restartBtn.disabled = false;
+            })
+            .catch((ex) => {
+                setStatus("Failed to restart game: " + ((ex && (ex.message || ex.problem)) || String(ex)), true);
+                restartBtn.disabled = false;
+            });
+    }
+
+    restartBtn.addEventListener("click", restartGame);
 
     refreshBtn.addEventListener("click", loadAll);
 

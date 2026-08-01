@@ -318,6 +318,15 @@
     tags:
     - sudo
 
+  - name: Allow stepmania to restart the game service without a password - For the cockpit plugin
+    community.general.sudoers:
+      name: stepmania-game-restart
+      user: stepmania
+      commands: /usr/bin/systemctl restart game
+      nopassword: true
+    tags:
+      - sudo
+
   - name: Restart polkit
     ansible.builtin.systemd:
       name: polkit
