@@ -248,11 +248,11 @@
       enabled: false
       state: stopped
 
-  - name: Enable and start game
+  - name: Enable game
     ansible.builtin.systemd:
       name: game.service
       enabled: true
-      state: started
+      state: stopped
 
   - name: Upload iwd cockpit plugins
     ansible.builtin.copy:
@@ -272,17 +272,6 @@
     - game-manager
     - debian-update
 
-  - name: Set iwd config
-    ansible.builtin.ini_file:
-      path: /etc/iwd/main.conf
-      section: General
-      option: EnableNetworkConfiguration
-      value: true
-      create: false
-      backup: false
-      no_extra_spaces: true
-    tags: wifi
-
   - name: DBus rule - allow netdev group to manage wifi
     ansible.builtin.copy:
       src: files/cockpit_modules/net.connman.iwd-netdev.conf
@@ -292,43 +281,17 @@
       group: root
     tags: wifi
 
-  # Done in a later stage in case any issues occur
-  - name: Install network dependencies
-    ansible.builtin.apt:
-      name: "{{ network_dependencies }}"
-      cache_valid_time: 600
-    with_items: "{{ installed_games }}"
-
-  - name: Enable and start required systemd units
+  - name: Enable required systemd units
     ansible.builtin.systemd:
       name: "{{ item }}"
       enabled: true
-      state: started
+      state: stopped
     with_items:
     - tty-watch.path
     - cockpit.service
-    - systemd-networkd
-    - systemd-resolved
     tags:
     - cockpit
     - network
-
-  - name: Disable other not-needed services
-    ansible.builtin.systemd:
-      name: "{{ item }}"
-      enabled: false
-      masked: true
-      state: stopped
-    when: item in ansible_facts.services
-    with_items:
-    - networking.service
-    - NetworkManager.service
-    - systemd-networkd-wait-online.service
-    - cloud-init.target
-    - wpa_supplicant.service
-    ignore_errors: true
-    tags:
-    - network 
 
   - name: Add stepmania user to sudoers
     community.general.sudoers:
@@ -346,3 +309,15 @@
 
   - name: Set default to graphical target
     ansible.builtin.command: "systemctl set-default graphical.target"
+
+  # Always run this before rebooting
+  - name: Replace network stack
+    include_tasks: tasks/network.yaml
+
+  - name: "Reboot system  (Ignore the error)"
+    ansible.builtin.command: "/sbin/shutdown -r now"
+    async: 0
+    poll: 0
+    ignore_errors: true
+    tags:
+    - reboot

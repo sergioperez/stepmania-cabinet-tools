@@ -45,15 +45,16 @@ After installation, the `stepmania` user will be available to connect over SCP t
 
 1. Clone this repository onto your host
 
-2. Install a Debian minimal OS into your target system:
-* When creating the first user, make sure its username is not `stepmania`
+2. Install a Debian minimal OS into your target system.
+
+3. Create an user named `stepmania` with administrator permissions (requiring password)
 * At the last steps of the installation process, check the box to install the SSH server
 
-3. Set the IP address or hostname of your target system into the `inventory` file
+4. Set the IP address or hostname of your target system into the `inventory` file
 
 4. Set the password for the `stepmania` user inside the `stepmania_password` variable of the `inventory` file
 
-5. Run the Ansible playbook: `ansible-playbook install_stepmania.yaml`
+5. Run the Ansible playbook: `ansible-playbook -k -e install_stepmania.yaml`
 
 6. When the playbook has finished, the target system will reboot and Stepmania will automatically start!
 
@@ -72,7 +73,7 @@ wget https://github.com/sergioperez/stepmania-cabinet-tools/new/release.zip
 unzip release.zip
 cd stepmania-cabinet-tools-release
 
-ansible-playbook install_stepmania.yaml
+# Run the ansible command specified in Installation
 ```
 
 * Note: If you prefer to use Docker, just write "docker" instead of "podman"
@@ -80,11 +81,11 @@ ansible-playbook install_stepmania.yaml
 
 ## ARM boards
 
-1. Install a minimal Debian 12 based distribution for your board, as could be Raspberry Pi OS Lite, Armbian Server, Debian 12 itself, or other.
+1. Install a minimal Debian 13 based distribution for your board, as could be Raspberry Pi OS Lite, Armbian Server, Debian 12 itself, or other.
 
-2. Follow the same steps specified in `Installation steps`, but this time, run the playbook as:
+**On Raspberry Pi:** Make sure you install Raspberry Pi OS Lite
 
-`ansible-playbook install_stepmania.yaml -e arch=arm64 --skip-tags grub`
+2. Follow the same steps specified in `Installation steps`.
 
 ### Raspberry Pi
 
@@ -121,7 +122,3 @@ To use it, set the following variables for your host in your inventory:
 ## Implementation details
 
 The set of available StepMania/ITGMania versions are defined under `group_vars/all`.
-
-## Credits
-
-Thanks to Enrico Zini for writing nodm and a LightDM configuration guide: https://www.enricozini.org/blog/2019/himblick/x-autologin/

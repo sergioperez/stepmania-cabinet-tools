@@ -1,0 +1,15 @@
+# /etc/systemd/network/99-ethernet-fallback.network
+# Fallback config: DHCP on any wired interface that has no
+# more specific config. 
+# The cockpit plugin will take precedence over this
+[Match]
+Type=ether
+
+[Network]
+DHCP=yes
+LinkLocalAddressing=no
+IPv6AcceptRA=yes
+
+[DHCPv4]
+UseDNS=yes
+UseRoutes=yes

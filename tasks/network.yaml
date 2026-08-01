@@ -1,0 +1,70 @@
+- name: Gather all known systemd services
+  ansible.builtin.service_facts:
+  tags:
+  - network
+
+- name: Set iwd config
+  ansible.builtin.ini_file:
+    path: /etc/iwd/main.conf
+    section: General
+    option: EnableNetworkConfiguration
+    value: true
+    create: false
+    backup: false
+    no_extra_spaces: true
+  tags: wifi
+
+- name: Set default systemd-networkd ethernet configuration (DHCP)
+  ansible.builtin.copy:
+    src: files/misc/99-ethernet-fallback.network
+    dest: /etc/systemd/network/99-ethernet-fallback.network
+    mode: "0644"
+    owner: root
+    group: root
+  tags: ethernet
+
+- name: Install systemd-resolved, iwd
+  ansible.builtin.apt:
+    name:
+    - systemd-resolved
+    - iwd
+    cache_valid_time: 600
+
+- name: Remove not used network packages
+  ansible.builtin.apt:
+    name: 
+    - ifupdown
+    - dhcpcd-base
+    - udhcpc
+    - isc-dhcp-client
+    - isc-dhcp-common
+    - raspberrypi-net-mods
+    state: absent
+
+- name: Disable other non-used network management tools
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    masked: true
+  when: item in ansible_facts.services
+  with_items:
+  - networking.service
+  - NetworkManager.service
+  - systemd-networkd-wait-online.service
+  - wpa_supplicant.service
+  - systemd-networkd-wait-online.service
+  ignore_errors: true
+  tags:
+  - network 
+
+- name: Enable systemd-networkd and systemd-resolved
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    masked: false
+  with_items:
+  - systemd-networkd
+  - systemd-resolved
+  tags:
+  - network 
+
