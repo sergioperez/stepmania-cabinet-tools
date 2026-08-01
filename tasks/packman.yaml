@@ -1,0 +1,67 @@
+- name: Detect architecture
+  ansible.builtin.command: uname -m
+  register: arch_result
+  changed_when: false
+  when: arch is not defined
+
+- name: Select architecture
+  ansible.builtin.set_fact:
+    arch: "{{ arch_map[arch_result.stdout] | default('x86_64') }}"
+  vars:
+    arch_map:
+      x86_64: x86_64
+      amd64: x86_64
+      aarch64: arm64
+      arm64: arm64
+      riscv64: riscv64
+  when: arch is not defined
+
+- name: Download packman binary into /usr/local/bin
+  ansible.builtin.get_url:
+    url: "{{ packman_release.url[arch] }}"
+    dest: /usr/local/bin/packman
+    mode: "0755"
+    force: true
+
+- name: Ensure packman binary is executable
+  ansible.builtin.file:
+    path: /usr/local/bin/packman
+    mode: "0755"
+
+- name: Ensure packman_dir exists
+  ansible.builtin.file:
+    path: "{{ packman_dir }}"
+    state: directory
+    mode: "0755"
+    owner: stepmania
+    group: stepmania
+
+- name: Ensure {{ packman_dir }}/packs.yaml exists
+  ansible.builtin.copy:
+    dest: "{{ packman_dir }}/packs.yaml"
+    content: |
+      packs: []
+    force: false
+    mode: "0644"
+    owner: stepmania
+    group: stepmania
+
+# Systemd unit - Start packman on boot
+- name: Install packman systemd unit
+  ansible.builtin.template:
+    src: files/packman/packman.service.j2
+    dest: /etc/systemd/system/packman.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable packman service
+  ansible.builtin.systemd:
+    name: packman.service
+    enabled: true
+    daemon_reload: true
+    state: stopped

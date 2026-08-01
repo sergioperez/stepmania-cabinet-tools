@@ -99,12 +99,28 @@
     - ".local/share/deadsync"
     - "songs"
 
+  - name: Set sound drivers to ALSA-sw - SM games based only
+    ansible.builtin.ini_file:
+      path: "{{ game_releases[item].config_file }}"
+      section: Options
+      option: SoundDrivers
+      value: "ALSA-sw,Null"
+      owner: stepmania
+      group: stepmania
+      mode: '0644'
+      create: true
+      backup: true
+      no_extra_spaces: true
+    with_items: "{{ installed_games }}"
+    tags:
+    - sound
+
   - name: Ensure AdditionalSongFoldersReadOnly is set in itgmania Preferences.ini
     ansible.builtin.ini_file:
       path: "{{ game_releases[item].config_file }}"
       section: Options
       option: AdditionalSongFoldersReadOnly
-      value: /home/stepmania/songs
+      value: "{{ pack_folder }}"
       owner: stepmania
       group: stepmania
       mode: '0644'
@@ -314,6 +330,29 @@
   - name: Replace network stack
     include_tasks: tasks/network.yaml
 
+  - name: Install sm-packman
+    ansible.builtin.include_tasks: tasks/packman.yaml
+
+  - name: Check if this is a Raspberry Pi
+    ansible.builtin.slurp:
+      src: /proc/device-tree/model
+    register: _device_model
+    ignore_errors: true
+    tags:
+    - rpi
+
+  - name: Set is_raspberry_pi fact
+    ansible.builtin.set_fact:
+      is_raspberry_pi: "{{ _device_model is succeeded and 'Raspberry Pi' in (_device_model.content | b64decode) }}"
+    tags:
+    - rpi
+
+  - name: Include Raspberry Pi specific tasks
+    ansible.builtin.include_tasks: tasks/extra_rpi.yaml
+    when: is_raspberry_pi
+    tags:
+    - rpi
+
   - name: "Reboot system  (Ignore the error)"
     ansible.builtin.command: "/sbin/shutdown -r now"
     async: 0
@@ -321,3 +360,4 @@
     ignore_errors: true
     tags:
     - reboot
+

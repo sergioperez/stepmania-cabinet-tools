@@ -73,6 +73,7 @@ extra_packages:
 - curl
 - yq
 
+pack_folder: "/home/stepmania/songs"
 packman_release:
   url:
     arm64: "https://github.com/sergioperez/stepmania-packman/releases/download/20260718/packman-arm64-20260718-97b3610"
