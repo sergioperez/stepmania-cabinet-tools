@@ -1,49 +1,60 @@
 # About
 
 This project is aimed at those who want to set up a lightweight Linux machine dedicated to running StepMania or ITGMania.
-It will set up a fresh Debian install to automatically run StepMania on boot. As soon as StepMania is closed, it will immediately restart it.
-Additionally, compared to a regular Debian install:
-* The USB polling rate is set to 1000 Hz, giving better performance to JPACs and USB input cards
-* Latency is reduced by only handling audio playback with ALSA instead of PulseAudio
-* Efficient use of system resources due to lack of desktop environment and unneeded processes, making this ideal for older, weaker hardware
 
-After installation, the `stepmania` user will be available to connect over SCP to push files
+Features:
+* Game auto-restart: The game will be restarted if it crashes
+* USB poling rate set to 1000Hz - Increased precission for input devices
+* Low audio latency - Uses ALSA directly
+* Less backgroun processes - The system will run only what is needed to run the game
+* Control panel: Protected by username+password, press Control+Alt+F2 to switch to the control panel, or access https://hostname:9090
+* Desktop: Protected by username+password, press Control+Alt+F3 to switch to a desktop
+* It can be used with any devices able to run Debian 13
 
-## Results
+## Modes
 
-- The game will start automatically
+The system will have three modes available:
 
-- Access the host IP:9090 to admin the host. This is also available locally by pressing **Control+Alt+F2**
+* Game: Runs the game
+    * Access methods:
+        * Default - Will be loaded as soon as the system boots
+        * Control+Alt+F1: Switch from a different mode to "game"
 
-- Press **Control+Alt+Fx** to change the system app, where **Fx** is:
+* Settings: Allows managing multiple plugins
+    * Access method:
+        * Press Control+Alt+F2 - Log-in as your stepmania user
+    * Functionalities:
+        * Swap and download games
+        * Configure Packman (Pack management)
+        * Set the ITGMania/StepMania sound device
+        * Configure ethernet
+        * Configure wifi
+        * System update 
+        * Plugins update
+        * Linux terminal
 
-    - **F1**: Game
-
-    - **F2**: Settings WebUI
-
-        - Packman: Manage packs in the host
-
-        - Sound device: Select a sound device for ITGMania/StepMania
-
-        - Ethernet/Wi-Fi: Connect the system to a network
-
-    - **F3**: Desktop
-
-**Always** authenticate as the **stepmania** user, and change the password for it and the root user through the WebUI on the first log-in.
+* Desktop: Lightweight desktop
+    * Access method:
+        * Press Control+Alt+F3 - Log-in as your stepmania user
+    * Functionalities:
+        * Firefox
+        * Linux terminal
 
 ## Prerequisites
 
-- Debian 13 base system (minimal, no desktop environment)
+* Tested target systems
+    * **Debian 13**
+    * **Raspberry Pi OS Lite (Debian 13)**
 
-- python3.11 openssh-server (installed in the target system)
+* You need to be able to ssh into your **target** system from your **installer** system as the **stepmania** user
 
-- An internet connection on the target system
+* The `stepmania` user needs to be able to run `sudo` with a password.
 
-- Being able to SSH as root/sudoers user to the target system
+* Ansible on the **installer** system
 
 # Installation
 
-1. Clone this repository onto your host
+1. Clone this repository in your host
 
 2. Install a Debian minimal OS into your target system.
 
@@ -66,18 +77,19 @@ You can run step #5 directly in your host. Alternatively, you can install Podman
 podman run -it  docker.io/alpine/ansible:2.20.0 bash
 
 # Check that you can access your device
-ssh youruser@yourdevice exit
+ssh stepmania@yourdevice exit
 
 cd
 wget https://github.com/sergioperez/stepmania-cabinet-tools/new/release.zip
 unzip release.zip
 cd stepmania-cabinet-tools-release
 
+# Adjust the inventory file
 # Run the ansible command specified in Installation
+ansible-playbook -k -e install_stepmania.yaml
 ```
 
 * Note: If you prefer to use Docker, just write "docker" instead of "podman"
-
 
 ## ARM boards
 
@@ -99,22 +111,18 @@ Using a Raspberry Pi for ITGMania can be a quite interesting idea, as:
 
 For 15khz interlaced modes in Raspberry Pi 5, see: https://www.raspberrypi.com/news/how-we-added-interlaced-video-to-raspberry-pi-5/
 
-For 1khz USB polling rate, set the parameters `usbhid.kbpoll=1`, `usbhid.jspoll=1` and  `usbhid.mousepoll=1` to `/boot/firmware/cmdline.txt`
-
 ### Packman
+
+**Note:** Packman is installed by default with the `install_stepmania.yaml` playbook. Configure it over the **Settings mode**.
 
 [StepMania Packman](https://github.com/sergioperez/stepmania-packman) is a tool to configure the desired list of packs in your system
 declaratively.
 
-To use it, set the following variables for your host in your inventory:
+You can pre-configure Packman with the following variables in your inventory:
 
 `disable_packman=false` Prevents packman from running
 
 `sm_pack_search_url="https://stepmaniaoffline.lan"`
-
-`arch=x86_64`
-
-`pack_folder=/home/stepmania/.itgmania/Songs` (Default as-is)
 
 `(Optional) pack_yaml_url: "https://my-web-server.lan/packs.yaml" Allows you to manage the packs.yaml file remotely
 
