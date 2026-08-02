@@ -35,13 +35,3 @@
     mode: "0755"
     owner: stepmania
     group: stepmania
-
-- name: Ensure {{ packman_dir }}/packs.yaml exists
-  ansible.builtin.copy:
-    dest: "{{ packman_dir }}/packs.yaml"
-    content: |
-      packs: []
-    force: false
-    mode: "0644"
-    owner: stepmania
-    group: stepmania
