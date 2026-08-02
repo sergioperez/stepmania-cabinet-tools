@@ -365,16 +365,31 @@
         render();
         resetTerminal("Downloading " + id + "\u2026");
 
-        const script = [
+        const scriptLines = [
             "set -e",
             "mkdir -p " + shQuote(dest),
             "curl -fL --progress-bar -o " + shQuote(tmpFile) + " " + shQuote(url),
             "tar -xf " + shQuote(tmpFile) + " -C " + shQuote(dest) + (extractOpts ? " " + extractOpts : ""),
             "find " + shQuote(dest) + " -maxdepth 1 -type f -iname 'portable.txt' -delete",
-            "rm -f " + shQuote(tmpFile),
-            "echo",
-            "echo 'Done.'"
-        ].join("\n");
+            "rm -f " + shQuote(tmpFile)
+        ];
+
+        // If the entry has a config_file and it doesn't exist yet, create it
+        // (and its parent directory) with the default song-folder setting.
+        if (entry.config_file) {
+            const marker = "GDCONFIGEOF";
+            const configBody = "[Options]\nAdditionalSongFoldersReadOnly=/home/stepmania/songs\nDisplayWidth=640\nDisplayHeight=480\n";
+            scriptLines.push(
+                "if [ ! -f " + shQuote(entry.config_file) + " ]; then",
+                "  mkdir -p \"$(dirname -- " + shQuote(entry.config_file) + ")\"",
+                "  cat > " + shQuote(entry.config_file) + " <<'" + marker + "'\n" + configBody + marker,
+                "fi"
+            );
+        }
+
+        scriptLines.push("echo", "echo 'Done.'");
+
+        const script = scriptLines.join("\n");
 
         const proc = cockpit.spawn(["bash", "-c", script], { pty: true, err: "out" });
         proc.stream((data) => termWrite(data));
