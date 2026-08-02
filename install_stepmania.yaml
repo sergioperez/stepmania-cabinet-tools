@@ -335,10 +335,6 @@
   - name: Set default to graphical target
     ansible.builtin.command: "systemctl set-default graphical.target"
 
-  # Always run this before rebooting
-  - name: Replace network stack
-    include_tasks: tasks/network.yaml
-
   - name: Install sm-packman
     ansible.builtin.include_tasks: tasks/packman.yaml
 
@@ -361,6 +357,10 @@
     when: is_raspberry_pi
     tags:
     - rpi
+
+  # Change network stack before rebooting
+  - name: Replace network stack
+    include_tasks: tasks/network.yaml
 
   - name: "Reboot system  (Ignore the error)"
     ansible.builtin.command: "/sbin/shutdown -r now"
