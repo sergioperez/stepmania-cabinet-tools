@@ -1,8 +1,7 @@
-[stepmania]
-#192.168.122.246 stepmania_password=12345678 ansible_user=root
-#192.168.1.246 stepmania_password=12345678 ansible_user=raspberry ansible_become=true
-#192.168.122.37 stepmania_password=12345678 ansible_user=root ansible_become=true
-#192.168.122.7 stepmania_password=12345678 ansible_user=root ansible_password=12345678 ansible_become=true
+# stepmania_password: password that will be set to the stepmania user
+# ansible_password: current password of the stepmania user
+# ansible_user: root/stepmania - connect to the system as this user
+# ansible_become: true - needed if non-root, harmless if root
 
-# For packman:
-192.168.122.53 stepmania_password=1234 ansible_user=root ansible_password=1234 ansible_become=true packman_dir=/home/stepmania/packman sm_pack_search_url="https://stepmaniaoffline.lan" arch=x86_64
+[stepmania]
+192.168.122.54 stepmania_password=1234 ansible_user=root ansible_password=1234 ansible_become=true
