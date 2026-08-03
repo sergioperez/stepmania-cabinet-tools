@@ -46,6 +46,11 @@ The system will have three modes available:
     * **Debian 13**
     * **Raspberry Pi OS Lite (Debian 13)**
 
+* GPUs with open source drivers
+    * This includes **Intel** and **AMD**
+    * Nvidia might work if you install the GPU drivers manually from [here](https://wiki.debian.org/NvidiaGraphicsDrivers)
+    * Other hardware will work if it is supported by mainline Linux or this is installed over a vendor image with a propietary blob.
+
 * You need to be able to ssh into your **target** system from your **installer** system as the **stepmania** user
 
 * The `stepmania` user needs to be able to run `sudo` with a password.
