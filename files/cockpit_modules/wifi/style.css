@@ -74,6 +74,89 @@ select, input[type=text], input[type=password] {
 
 .btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
 
+.tab-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tab-btn {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: #f5f5f5;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+.tab-btn.active {
+  background: #fff;
+  color: #151515;
+  font-weight: 600;
+}
+.tab-btn:hover { background: var(--bg-hover); }
+
+.tab-panel.hidden { display: none !important; }
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.settings-row label { font-size: 0.9rem; }
+.settings-row button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.country-picker { position: relative; }
+
+#country-picker-btn {
+  min-width: 260px;
+  text-align: left;
+}
+
+.country-dropdown {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 50;
+  width: 300px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 0.35rem;
+}
+.country-dropdown.hidden { display: none; }
+
+.country-filter-input {
+  width: 100%;
+  margin-bottom: 0.35rem;
+  box-sizing: border-box;
+}
+
+#country-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+#country-options li {
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  border-radius: 3px;
+}
+#country-options li:hover { background: var(--bg-hover); }
+#country-options li.hidden { display: none; }
+#country-options li.selected { background: #e6f0fb; font-weight: 600; }
+
 .status-bar {
   padding: 0.5rem 0.75rem;
   background: #f5f5f5;

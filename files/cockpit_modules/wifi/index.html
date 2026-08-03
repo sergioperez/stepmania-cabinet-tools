@@ -10,15 +10,10 @@
   <div id="app">
     <header class="app-header">
       <h1>Wi-Fi</h1>
-      <div class="header-actions">
-        <select id="device-select"></select>
-        <label class="switch-label">
-          <input type="checkbox" id="power-toggle">
-          <span>Wi-Fi enabled</span>
-        </label>
-        <button id="scan-btn" class="btn">Scan</button>
-        <button id="hidden-btn" class="btn btn-secondary">Hidden network&hellip;</button>
-      </div>
+      <nav class="tab-nav">
+        <button class="tab-btn active" id="tab-btn-wifi" type="button">Networks</button>
+        <button class="tab-btn" id="tab-btn-settings" type="button">Settings</button>
+      </nav>
     </header>
 
     <div id="admin-bar" class="admin-bar hidden">
@@ -28,15 +23,55 @@
     <div id="status-bar" class="status-bar"></div>
     <div id="error-bar" class="error-bar hidden"></div>
 
-    <section id="known-section">
-      <h2>Known networks</h2>
-      <ul id="known-list" class="network-list"></ul>
-    </section>
+    <div id="tab-wifi" class="tab-panel">
+      <div class="header-actions">
+        <select id="device-select"></select>
+        <label class="switch-label">
+          <input type="checkbox" id="power-toggle">
+          <span>Wi-Fi enabled</span>
+        </label>
+        <button id="scan-btn" class="btn">Scan</button>
+        <button id="hidden-btn" class="btn btn-secondary">Hidden network&hellip;</button>
+      </div>
 
-    <section id="available-section">
-      <h2>Available networks</h2>
-      <ul id="network-list" class="network-list"></ul>
-    </section>
+      <section id="known-section">
+        <h2>Known networks</h2>
+        <ul id="known-list" class="network-list"></ul>
+      </section>
+
+      <section id="available-section">
+        <h2>Available networks</h2>
+        <ul id="network-list" class="network-list"></ul>
+      </section>
+    </div>
+
+    <div id="tab-settings" class="tab-panel hidden">
+      <section id="settings-section">
+        <h2>Regulatory domain</h2>
+        <p class="ip-note">
+          Sets your Wi-Fi hardware to follow the radio rules of the
+          country you're in (allowed channels, power limits). Applying a
+          change restarts the <code>iwd</code> service, which will
+          briefly drop any active Wi-Fi connection.
+        </p>
+        <div class="settings-row">
+          <label for="country-picker-btn">Country</label>
+          <div class="country-picker">
+            <button type="button" id="country-picker-btn" class="btn btn-secondary" disabled>
+              Loading&hellip;
+            </button>
+            <div id="country-picker-list" class="country-dropdown hidden">
+              <input type="text" id="country-filter" class="country-filter-input"
+                     placeholder="Filter countries&hellip;" autocomplete="off">
+              <ul id="country-options"></ul>
+            </div>
+          </div>
+          <button id="country-save" class="btn" disabled>Save</button>
+        </div>
+        <div id="settings-status" class="status-bar"></div>
+        <div id="settings-error" class="error-bar hidden"></div>
+      </section>
+    </div>
   </div>
 
   <div id="passphrase-modal" class="modal hidden">

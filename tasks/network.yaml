@@ -14,15 +14,6 @@
     no_extra_spaces: true
   tags: wifi
 
-- name: Set default systemd-networkd ethernet configuration (DHCP)
-  ansible.builtin.copy:
-    src: files/misc/99-ethernet-fallback.network
-    dest: /etc/systemd/network/99-ethernet-fallback.network
-    mode: "0644"
-    owner: root
-    group: root
-  tags: ethernet
-
 - name: Install systemd-resolved, iwd
   ansible.builtin.apt:
     name:
@@ -56,6 +47,35 @@
   ignore_errors: true
   tags:
   - network 
+
+- name: Find any previously existing networkd configurations
+  ansible.builtin.find:
+    paths: /etc/systemd/network
+    file_type: any
+    hidden: true
+  register: networkd_configs
+
+- name: Remove any previously existing networkd configurations
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ networkd_configs.files }}"
+
+- name: Set default systemd-networkd ethernet configuration (DHCP)
+  ansible.builtin.copy:
+    src: "{{ item.file }}"
+    dest: "/etc/systemd/network/{{ item.destination }}"
+    mode: "0644"
+    owner: root
+    group: root
+  with_items:
+  - file: files/misc/99-ethernet-fallback.network
+    destination: 99-ethernet-fallback.network
+  - file: files/misc/99-wifi-networkd.network
+    destination: 99-wifi-networkd.network
+  tags:
+  - ethernet
+  - wifi
 
 - name: Enable systemd-networkd and systemd-resolved
   ansible.builtin.systemd:

@@ -1,0 +1,7 @@
+# /etc/systemd/network/99-wifi-networkd.network
+# IWD will manage it's own DHCP
+[Match]
+Type=wlan
+
+[Network]
+Unmanaged=yes

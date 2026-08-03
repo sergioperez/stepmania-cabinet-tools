@@ -12,7 +12,7 @@
 
     const IWD_BUS_NAME = "net.connman.iwd";
     const AGENT_MANAGER_PATH = "/net/connman/iwd";
-    const AGENT_HELPER = "/usr/share/cockpit/iwd/iwd-agent.py";
+    const AGENT_HELPER = "/usr/share/cockpit/wifi/iwd-agent.py";
 
     const client = cockpit.dbus(IWD_BUS_NAME, { bus: "system", superuser: "try" });
 
@@ -878,6 +878,336 @@
     }
 
     /* ---------------------------------------------------------------- */
+
+    /* ---------------------------------------------------------------- */
+    /* Settings tab: regulatory domain (Country) in /etc/iwd/main.conf   */
+    /*                                                                    */
+    /* iwd.config(5): [General].Country takes an ISO 3166-1 alpha-2      */
+    /* code and is only read at daemon startup - unlike the per-network   */
+    /* storage files, iwd does not hot-reload main.conf, so applying a    */
+    /* change here restarts the iwd service.                             */
+    /* ---------------------------------------------------------------- */
+
+    const IWD_MAIN_CONF = "/etc/iwd/main.conf";
+
+    // ISO 3166-1 alpha-2 codes and English short names.
+    const COUNTRIES = [
+        ["AF", "Afghanistan"], ["AX", "\u00c5land Islands"], ["AL", "Albania"], ["DZ", "Algeria"],
+        ["AS", "American Samoa"], ["AD", "Andorra"], ["AO", "Angola"], ["AI", "Anguilla"],
+        ["AQ", "Antarctica"], ["AG", "Antigua and Barbuda"], ["AR", "Argentina"], ["AM", "Armenia"],
+        ["AW", "Aruba"], ["AU", "Australia"], ["AT", "Austria"], ["AZ", "Azerbaijan"],
+        ["BS", "Bahamas"], ["BH", "Bahrain"], ["BD", "Bangladesh"], ["BB", "Barbados"],
+        ["BY", "Belarus"], ["BE", "Belgium"], ["BZ", "Belize"], ["BJ", "Benin"],
+        ["BM", "Bermuda"], ["BT", "Bhutan"], ["BO", "Bolivia"], ["BA", "Bosnia and Herzegovina"],
+        ["BW", "Botswana"], ["BV", "Bouvet Island"], ["BR", "Brazil"],
+        ["IO", "British Indian Ocean Territory"], ["BN", "Brunei Darussalam"], ["BG", "Bulgaria"],
+        ["BF", "Burkina Faso"], ["BI", "Burundi"], ["CV", "Cabo Verde"], ["KH", "Cambodia"],
+        ["CM", "Cameroon"], ["CA", "Canada"], ["KY", "Cayman Islands"],
+        ["CF", "Central African Republic"], ["TD", "Chad"], ["CL", "Chile"], ["CN", "China"],
+        ["CX", "Christmas Island"], ["CC", "Cocos (Keeling) Islands"], ["CO", "Colombia"],
+        ["KM", "Comoros"], ["CG", "Congo"], ["CD", "Congo (Democratic Republic)"],
+        ["CK", "Cook Islands"], ["CR", "Costa Rica"], ["CI", "C\u00f4te d'Ivoire"], ["HR", "Croatia"],
+        ["CU", "Cuba"], ["CW", "Cura\u00e7ao"], ["CY", "Cyprus"], ["CZ", "Czechia"],
+        ["DK", "Denmark"], ["DJ", "Djibouti"], ["DM", "Dominica"], ["DO", "Dominican Republic"],
+        ["EC", "Ecuador"], ["EG", "Egypt"], ["SV", "El Salvador"], ["GQ", "Equatorial Guinea"],
+        ["ER", "Eritrea"], ["EE", "Estonia"], ["SZ", "Eswatini"], ["ET", "Ethiopia"],
+        ["FK", "Falkland Islands"], ["FO", "Faroe Islands"], ["FJ", "Fiji"], ["FI", "Finland"],
+        ["FR", "France"], ["GF", "French Guiana"], ["PF", "French Polynesia"],
+        ["TF", "French Southern Territories"], ["GA", "Gabon"], ["GM", "Gambia"], ["GE", "Georgia"],
+        ["DE", "Germany"], ["GH", "Ghana"], ["GI", "Gibraltar"], ["GR", "Greece"],
+        ["GL", "Greenland"], ["GD", "Grenada"], ["GP", "Guadeloupe"], ["GU", "Guam"],
+        ["GT", "Guatemala"], ["GG", "Guernsey"], ["GN", "Guinea"], ["GW", "Guinea-Bissau"],
+        ["GY", "Guyana"], ["HT", "Haiti"], ["VA", "Holy See"], ["HN", "Honduras"],
+        ["HK", "Hong Kong"], ["HU", "Hungary"], ["IS", "Iceland"], ["IN", "India"],
+        ["ID", "Indonesia"], ["IR", "Iran"], ["IQ", "Iraq"], ["IE", "Ireland"],
+        ["IM", "Isle of Man"], ["IL", "Israel"], ["IT", "Italy"], ["JM", "Jamaica"],
+        ["JP", "Japan"], ["JE", "Jersey"], ["JO", "Jordan"], ["KZ", "Kazakhstan"], ["KE", "Kenya"],
+        ["KI", "Kiribati"], ["KP", "Korea (North)"], ["KR", "Korea (South)"], ["KW", "Kuwait"],
+        ["KG", "Kyrgyzstan"], ["LA", "Lao People's Democratic Republic"], ["LV", "Latvia"],
+        ["LB", "Lebanon"], ["LS", "Lesotho"], ["LR", "Liberia"], ["LY", "Libya"],
+        ["LI", "Liechtenstein"], ["LT", "Lithuania"], ["LU", "Luxembourg"], ["MO", "Macao"],
+        ["MG", "Madagascar"], ["MW", "Malawi"], ["MY", "Malaysia"], ["MV", "Maldives"],
+        ["ML", "Mali"], ["MT", "Malta"], ["MH", "Marshall Islands"], ["MQ", "Martinique"],
+        ["MR", "Mauritania"], ["MU", "Mauritius"], ["YT", "Mayotte"], ["MX", "Mexico"],
+        ["FM", "Micronesia"], ["MD", "Moldova"], ["MC", "Monaco"], ["MN", "Mongolia"],
+        ["ME", "Montenegro"], ["MS", "Montserrat"], ["MA", "Morocco"], ["MZ", "Mozambique"],
+        ["MM", "Myanmar"], ["NA", "Namibia"], ["NR", "Nauru"], ["NP", "Nepal"],
+        ["NL", "Netherlands"], ["NC", "New Caledonia"], ["NZ", "New Zealand"], ["NI", "Nicaragua"],
+        ["NE", "Niger"], ["NG", "Nigeria"], ["NU", "Niue"], ["NF", "Norfolk Island"],
+        ["MK", "North Macedonia"], ["MP", "Northern Mariana Islands"], ["NO", "Norway"],
+        ["OM", "Oman"], ["PK", "Pakistan"], ["PW", "Palau"], ["PS", "Palestine, State of"],
+        ["PA", "Panama"], ["PG", "Papua New Guinea"], ["PY", "Paraguay"], ["PE", "Peru"],
+        ["PH", "Philippines"], ["PN", "Pitcairn"], ["PL", "Poland"], ["PT", "Portugal"],
+        ["PR", "Puerto Rico"], ["QA", "Qatar"], ["RE", "R\u00e9union"], ["RO", "Romania"],
+        ["RU", "Russian Federation"], ["RW", "Rwanda"], ["BL", "Saint Barth\u00e9lemy"],
+        ["SH", "Saint Helena"], ["KN", "Saint Kitts and Nevis"], ["LC", "Saint Lucia"],
+        ["MF", "Saint Martin"], ["PM", "Saint Pierre and Miquelon"],
+        ["VC", "Saint Vincent and the Grenadines"], ["WS", "Samoa"], ["SM", "San Marino"],
+        ["ST", "Sao Tome and Principe"], ["SA", "Saudi Arabia"], ["SN", "Senegal"],
+        ["RS", "Serbia"], ["SC", "Seychelles"], ["SL", "Sierra Leone"], ["SG", "Singapore"],
+        ["SX", "Sint Maarten"], ["SK", "Slovakia"], ["SI", "Slovenia"], ["SB", "Solomon Islands"],
+        ["SO", "Somalia"], ["ZA", "South Africa"],
+        ["GS", "South Georgia and the South Sandwich Islands"], ["SS", "South Sudan"],
+        ["ES", "Spain"], ["LK", "Sri Lanka"], ["SD", "Sudan"], ["SR", "Suriname"],
+        ["SJ", "Svalbard and Jan Mayen"], ["SE", "Sweden"], ["CH", "Switzerland"],
+        ["SY", "Syrian Arab Republic"], ["TW", "Taiwan"], ["TJ", "Tajikistan"],
+        ["TZ", "Tanzania"], ["TH", "Thailand"], ["TL", "Timor-Leste"], ["TG", "Togo"],
+        ["TK", "Tokelau"], ["TO", "Tonga"], ["TT", "Trinidad and Tobago"], ["TN", "Tunisia"],
+        ["TR", "Turkey"], ["TM", "Turkmenistan"], ["TC", "Turks and Caicos Islands"],
+        ["TV", "Tuvalu"], ["UG", "Uganda"], ["UA", "Ukraine"], ["AE", "United Arab Emirates"],
+        ["GB", "United Kingdom"], ["US", "United States of America"],
+        ["UM", "United States Minor Outlying Islands"], ["UY", "Uruguay"], ["UZ", "Uzbekistan"],
+        ["VU", "Vanuatu"], ["VE", "Venezuela"], ["VN", "Viet Nam"],
+        ["VG", "Virgin Islands (British)"], ["VI", "Virgin Islands (U.S.)"],
+        ["WF", "Wallis and Futuna"], ["EH", "Western Sahara"], ["YE", "Yemen"], ["ZM", "Zambia"],
+        ["ZW", "Zimbabwe"]
+    ];
+
+    let selectedCountryCode = "";
+
+    function countryLabel(code) {
+        if (!code)
+            return "Not set (use kernel/driver default)";
+        const found = COUNTRIES.find(([c]) => c === code);
+        return found ? found[1] + " (" + code + ")" : code;
+    }
+
+    function selectCountry(code) {
+        selectedCountryCode = code;
+        el("country-picker-btn").textContent = countryLabel(code);
+        Array.from(el("country-options").children).forEach((li) => {
+            li.classList.toggle("selected", li.dataset.code === code);
+        });
+        closeCountryDropdown();
+    }
+
+    function filterCountryOptions(query) {
+        const q = query.trim().toLowerCase();
+        Array.from(el("country-options").children).forEach((li) => {
+            li.classList.toggle("hidden", !(!q || li.textContent.toLowerCase().includes(q)));
+        });
+    }
+
+    function openCountryDropdown() {
+        if (el("country-picker-btn").disabled)
+            return;
+        el("country-picker-list").classList.remove("hidden");
+        const filterInput = el("country-filter");
+        filterInput.value = "";
+        filterCountryOptions("");
+        filterInput.focus();
+    }
+
+    function closeCountryDropdown() {
+        el("country-picker-list").classList.add("hidden");
+    }
+
+    // A custom, self-positioned dropdown instead of a native <select>:
+    // native <select> popups are positioned by the browser relative to
+    // the containing document, which can render with a visible gap (and
+    // broken hover-tracking through that gap) inside Cockpit's iframe.
+    // Building this ourselves keeps positioning entirely inside our own
+    // CSS/layout, where we're not at the mercy of that.
+    function populateCountryPicker() {
+        const list = el("country-options");
+        list.innerHTML = "";
+
+        function addOption(code, label) {
+            const li = document.createElement("li");
+            li.textContent = label;
+            li.dataset.code = code;
+            li.onclick = () => selectCountry(code);
+            list.appendChild(li);
+        }
+
+        addOption("", "Not set (use kernel/driver default)");
+        COUNTRIES.forEach(([code, name]) => addOption(code, name + " (" + code + ")"));
+
+        el("country-picker-btn").onclick = (ev) => {
+            ev.stopPropagation();
+            if (el("country-picker-list").classList.contains("hidden"))
+                openCountryDropdown();
+            else
+                closeCountryDropdown();
+        };
+        el("country-filter").oninput = (ev) => filterCountryOptions(ev.target.value);
+        el("country-picker-list").onclick = (ev) => ev.stopPropagation();
+        document.addEventListener("click", closeCountryDropdown);
+        document.addEventListener("keydown", (ev) => {
+            if (ev.key === "Escape")
+                closeCountryDropdown();
+        });
+    }
+
+    // Upserts a single Key=Value line inside [section], creating the
+    // section (and the file, if it doesn't exist yet) if needed, without
+    // touching any other key already present - main.conf commonly already
+    // has EnableNetworkConfiguration and other [General] settings that
+    // must survive this edit untouched.
+    function upsertKeyValue(lines, sectionName, key, value) {
+        const out = lines.slice();
+        const section = findSection(out, sectionName);
+
+        if (!section) {
+            if (out.length && out[out.length - 1].trim() !== "")
+                out.push("");
+            out.push("[" + sectionName + "]");
+            if (value)
+                out.push(key + "=" + escapeSettingValue(value));
+            return out;
+        }
+
+        const keyRe = new RegExp("^\\s*" + key + "\\s*=");
+        let keyLineIdx = -1;
+        for (let i = section.start + 1; i < section.end; i++) {
+            if (keyRe.test(out[i])) { keyLineIdx = i; break; }
+        }
+
+        if (!value) {
+            if (keyLineIdx !== -1)
+                out.splice(keyLineIdx, 1);
+            return out;
+        }
+
+        const line = key + "=" + escapeSettingValue(value);
+        if (keyLineIdx !== -1)
+            out[keyLineIdx] = line;
+        else
+            out.splice(section.end, 0, line);
+        return out;
+    }
+
+    function loadMainConfLines() {
+        const file = cockpit.file(IWD_MAIN_CONF, { superuser: "try" });
+        return file.read().then((content) => {
+            file.close();
+            return (content || "").split("\n");
+        }, (err) => {
+            file.close();
+            // main.conf is optional; iwd.config(5) says defaults apply if
+            // it's absent, so treat "not found" as an empty file to start.
+            if (err && err.problem === "not-found")
+                return [""];
+            throw err;
+        });
+    }
+
+    function currentCountryFromLines(lines) {
+        const section = findSection(lines, "General");
+        if (!section)
+            return "";
+        return parseKeyValueLines(lines, section.start + 1, section.end).Country || "";
+    }
+
+    function setSettingsControlsEnabled(enabled) {
+        el("country-picker-btn").disabled = !enabled;
+        el("country-save").disabled = !enabled;
+        if (!enabled)
+            closeCountryDropdown();
+    }
+
+    function setSettingsStatus(text) {
+        el("settings-status").textContent = text || "";
+    }
+
+    function setSettingsError(text) {
+        const bar = el("settings-error");
+        if (!text) {
+            bar.classList.add("hidden");
+            bar.textContent = "";
+        } else {
+            bar.classList.remove("hidden");
+            bar.textContent = text;
+        }
+    }
+
+    function loadSettingsTab() {
+        setSettingsError(null);
+        setSettingsStatus("Loading\u2026");
+
+        // Requirement: never let a non-admin pick a country - keep the
+        // control disabled until Cockpit's admin access is confirmed on,
+        // regardless of whether the read below would have worked anyway.
+        setSettingsControlsEnabled(adminPermission.allowed === true);
+        if (adminPermission.allowed !== true) {
+            setSettingsStatus("");
+            setSettingsError("Changing the country requires administrative access. " +
+                              "Turn on administrative access (see banner above).");
+            return;
+        }
+
+        loadMainConfLines()
+            .then((lines) => {
+                selectCountry(currentCountryFromLines(lines));
+                setSettingsStatus("");
+            })
+            .catch((err) => {
+                setSettingsControlsEnabled(false);
+                if (err && err.problem === "access-denied") {
+                    setSettingsError("Changing the country requires administrative access. " +
+                                      "Turn on administrative access (see banner above).");
+                } else {
+                    setSettingsError("Could not read " + IWD_MAIN_CONF + ": " + dbusErrorMessage(err));
+                }
+            });
+    }
+
+    function saveCountry() {
+        if (adminPermission.allowed !== true) {
+            // Belt and suspenders: the control should already be disabled,
+            // but never act on this without a confirmed-admin session.
+            setSettingsError("Administrative access is required to change the country.");
+            return;
+        }
+
+        const code = selectedCountryCode;
+        setSettingsError(null);
+        setSettingsStatus("Saving\u2026");
+
+        loadMainConfLines()
+            .then((lines) => {
+                const newLines = upsertKeyValue(lines, "General", "Country", code);
+                const content = newLines.join("\n");
+                const file = cockpit.file(IWD_MAIN_CONF, { superuser: "try" });
+                return file.replace(content).then(
+                    () => { file.close(); },
+                    (err) => { file.close(); throw err; });
+            })
+            .then(() => {
+                setSettingsStatus("Saved.");
+                if (!window.confirm("Restart the iwd service now to apply the new country? " +
+                                     "This will briefly disconnect Wi-Fi."))
+                    return;
+                setSettingsStatus("Restarting iwd\u2026");
+                return cockpit.spawn(["systemctl", "restart", "iwd"], { superuser: "try", err: "message" })
+                    .then(() => {
+                        setSettingsStatus("iwd restarted.");
+                        window.setTimeout(() => refresh().then(refreshOrderedNetworks), 2000);
+                    });
+            })
+            .catch((err) => {
+                setSettingsStatus("");
+                if (err && err.problem === "access-denied")
+                    setSettingsError("Administrative access is required to change the country.");
+                else
+                    setSettingsError("Could not save: " + dbusErrorMessage(err));
+            });
+    }
+
+    function switchTab(tab) {
+        const wifiBtn = el("tab-btn-wifi");
+        const settingsBtn = el("tab-btn-settings");
+        const wifiPanel = el("tab-wifi");
+        const settingsPanel = el("tab-settings");
+
+        wifiBtn.classList.toggle("active", tab === "wifi");
+        settingsBtn.classList.toggle("active", tab === "settings");
+        wifiPanel.classList.toggle("hidden", tab !== "wifi");
+        settingsPanel.classList.toggle("hidden", tab !== "settings");
+
+        if (tab === "settings")
+            loadSettingsTab();
+    }
     /* Agent-mediated connect (first-time passphrase entry)              */
     /* ---------------------------------------------------------------- */
 
@@ -1051,11 +1381,23 @@
         el("scan-btn").onclick = scan;
         el("hidden-btn").onclick = promptHidden;
 
+        el("tab-btn-wifi").onclick = () => switchTab("wifi");
+        el("tab-btn-settings").onclick = () => switchTab("settings");
+        populateCountryPicker();
+        el("country-save").onclick = saveCountry;
+
         adminPermission.addEventListener("changed", () => {
             if (adminPermission.allowed) {
                 el("admin-bar").classList.add("hidden");
                 refresh().then(refreshOrderedNetworks);
             }
+            // The Settings tab's own controls are gated independently
+            // (see setSettingsControlsEnabled) since this can change while
+            // that tab is the active one.
+            if (!el("tab-settings").classList.contains("hidden"))
+                loadSettingsTab();
+            else
+                setSettingsControlsEnabled(adminPermission.allowed === true);
         });
         el("admin-btn").onclick = () => {
             // Clicking Cockpit's own shield/lock button is the normal way
