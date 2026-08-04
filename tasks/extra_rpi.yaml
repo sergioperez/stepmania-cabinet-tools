@@ -1,6 +1,5 @@
-- name: Disable specified systemd unit
+- name: Disable not needed systemd units
   ansible.builtin.systemd_service:
-    state: stopped
     masked: true
     enabled: false
     name: "{{ item }}"

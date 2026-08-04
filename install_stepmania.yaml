@@ -11,11 +11,28 @@
     tags:
     - network
 
+  - name: Ensure systemd preset directory exists
+    ansible.builtin.file:
+      path: /etc/systemd/system-preset
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+
+  - name: Prevent apt-installed packages from auto-enabling systemd units
+    ansible.builtin.copy:
+      dest: /etc/systemd/system-preset/00-disable-all.conf
+      content: |
+        disable *
+      owner: root
+      group: root
+      mode: "0644"
+
   - name: Try to disable most common display managers (In case this is not a fresh minimal install)
     ansible.builtin.systemd:
       name: "{{ item }}"
       enabled: false
-      state: stopped
+      masked: true
     when: item in ansible_facts.services
     with_items:
       - lightdm.service
@@ -261,14 +278,8 @@
   - name: Ensure greetd is disabled
     ansible.builtin.systemd:
       name: greetd.service
+      masked: true
       enabled: false
-      state: stopped
-
-  - name: Enable game
-    ansible.builtin.systemd:
-      name: game.service
-      enabled: true
-      state: stopped
 
   - name: Upload iwd cockpit plugins
     ansible.builtin.copy:
@@ -297,17 +308,18 @@
       group: root
     tags: wifi
 
-  - name: Enable required systemd units
+  - name: Enable game and required systemd units
     ansible.builtin.systemd:
       name: "{{ item }}"
       enabled: true
-      state: stopped
     with_items:
     - tty-watch.path
     - cockpit.service
+    - game.service
     tags:
     - cockpit
     - network
+    - systemd
 
   - name: Add stepmania user to sudoers
     community.general.sudoers:
@@ -331,6 +343,8 @@
     ansible.builtin.systemd:
       name: polkit
       state: restarted
+    tags:
+    - live
 
   - name: Set default to graphical target
     ansible.builtin.command: "systemctl set-default graphical.target"
@@ -348,7 +362,7 @@
 
   - name: Set is_raspberry_pi fact
     ansible.builtin.set_fact:
-      is_raspberry_pi: "{{ _device_model is succeeded and 'Raspberry Pi' in (_device_model.content | b64decode) }}"
+      is_raspberry_pi: "{{ raspberrypi_build | default(false) | bool or (_device_model is succeeded and 'Raspberry Pi' in (_device_model.content | b64decode)) }}"
     tags:
     - rpi
 
@@ -369,4 +383,4 @@
     ignore_errors: true
     tags:
     - reboot
-
+    - live
