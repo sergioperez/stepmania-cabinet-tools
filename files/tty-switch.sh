@@ -5,12 +5,13 @@ case "${ACTIVE}" in
     "tty1")
       systemctl stop desktop
       systemctl stop settings
+      systemctl reset-failed desktop settings 2>/dev/null
       systemctl start game
       ;;
     "tty2")
       systemctl stop desktop
       systemctl stop game
-      systemctl reset-failed game 2>/dev/null
+      systemctl reset-failed game desktop 2>/dev/null
       systemctl start settings
       ;;
     "tty3")

@@ -281,7 +281,7 @@
       masked: true
       enabled: false
 
-  - name: Upload iwd cockpit plugins
+  - name: Upload cockpit plugins
     ansible.builtin.copy:
       src: "files/cockpit_modules/{{ item }}"
       dest: /usr/share/cockpit/
@@ -330,11 +330,15 @@
     tags:
     - sudo
 
-  - name: Allow stepmania to restart the game service without a password - For the cockpit plugin
+  - name: Set passwordless sudo rules for stepmania user - manage game lifecycle
     community.general.sudoers:
-      name: stepmania-game-restart
+      name: stepmania-game-lifecycle
       user: stepmania
-      commands: /usr/bin/systemctl restart game
+      commands:
+      - /usr/share/cockpit/select-audio/set_audio_device.sh
+      - /usr/bin/systemctl restart game
+      - /usr/bin/systemctl start game
+      - /usr/bin/systemctl stop game
       nopassword: true
     tags:
       - sudo

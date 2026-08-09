@@ -36,6 +36,7 @@ async function loadAlsaDevices() {
             }
             button.addEventListener("click", async () => {
                 await cockpit.spawn([
+                    "/usr/bin/sudo",
                     "/usr/share/cockpit/select-audio/set_audio_device.sh",
                     dev.name
                 ])

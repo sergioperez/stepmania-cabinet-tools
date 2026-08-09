@@ -71,6 +71,7 @@ extra_packages:
 - sudo
 - curl
 - yq
+- x11-xserver-utils # for xrandr
 
 pack_folder: "/home/stepmania/songs"
 packman_dir: "/home/stepmania/packman"
