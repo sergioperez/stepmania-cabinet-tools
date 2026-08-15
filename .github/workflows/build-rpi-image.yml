@@ -69,7 +69,7 @@ jobs:
         run: sudo -E ./build.sh
 
       - name: Upload image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: stepmania-cabinet-rpi-image
           path: |

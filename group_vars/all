@@ -83,3 +83,13 @@ packman_release:
   binary_path: "/usr/local/bin/packman"
 
 tested_debian_release: trixie
+
+rpi:
+  dpi_modes:
+    720x480i@60hz: |
+      dtoverlay=vc4-kms-dpi-generic
+      dtparam=clock-frequency=13500000
+      dtparam=hactive=720,hfp=12,hsync=64,hbp=68
+      dtparam=vactive=480,vfp=11,vsync=5,vbp=39
+      dtparam=vsync-invert,hsync-invert
+      dtparam=interlaced

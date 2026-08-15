@@ -44,7 +44,7 @@ INV
 # first real boot.
 ansible-playbook -i inventory.local install_stepmania.yaml \
   -e stepmania_password=stepmania -e raspberrypi_build=true \
-  --skip-tags=reboot
+  --skip-tags=reboot -e rpi_dpi_mode=720x480i@60hz
 
 rm -f inventory.local
 

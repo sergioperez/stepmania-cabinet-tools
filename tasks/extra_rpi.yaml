@@ -106,3 +106,35 @@
   with_items:
   - { name: vm.dirty_writeback_centisecs, value: '500' }
   - { name: vm.dirty_expire_centisecs, value: '9000' }
+
+# DPI output configuration
+- name: Ensure /boot/firmware/dpi-config.txt exists (empty if missing)
+  ansible.builtin.copy:
+    dest: /boot/firmware/dpi-config.txt
+    content: ""
+    force: false
+    owner: root
+    group: root
+    mode: '0644'
+
+# Include it even if it is empty
+#   this will be changeable over a cockpit plugin
+- name: Ensure config.txt includes the DPI mode file
+  ansible.builtin.lineinfile:
+    path: "{{ boot_config_path }}"
+    line: "include dpi-config.txt"
+    insertafter: EOF
+    state: present
+
+- name: Fail if dpi_mode is set but not a known mode
+  ansible.builtin.fail:
+    msg: >-
+      rpi_dpi_mode "{{ rpi_dpi_mode }}" is not a valid mode.
+      Available modes: {{ rpi.dpi_modes.keys() | list }}
+  when: rpi_dpi_mode is defined and rpi_dpi_mode not in rpi.dpi_modes
+
+- name: Write DPI mode config to its own file
+  ansible.builtin.copy:
+    dest: /boot/firmware/dpi-config.txt
+    content: "{{ rpi.dpi_modes[rpi_dpi_mode] }}"
+  when: rpi_dpi_mode is defined
