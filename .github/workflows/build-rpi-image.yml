@@ -1,0 +1,79 @@
+name: Build Raspberry Pi image
+
+env:
+  RELEASE: trixie
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v7
+        with:
+          path: stepmania-cabinet-tools
+
+      - name: Check out pi-gen (arm64 branch)
+        uses: actions/checkout@v7
+        with:
+          repository: RPi-Distro/pi-gen
+          ref: arm64
+          path: pi-gen
+
+      - name: Install pi-gen build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            coreutils quilt parted qemu-user-binfmt \
+            debootstrap zerofree zip dosfstools e2fsprogs libarchive-tools \
+            libcap2-bin grep rsync xz-utils file git curl bc gpg pigz xxd \
+            arch-test kmod
+
+      - name: Install the custom stage into pi-gen
+        run: |
+          cp -r stepmania-cabinet-tools/images/rpi/ pi-gen/stage-stepmania
+          chmod +x pi-gen/stage-stepmania/prerun.sh
+          chmod +x pi-gen/stage-stepmania/00-run-ansible/00-run.sh
+
+      - name: Configure pi-gen
+        working-directory: pi-gen
+        run: |
+          # stage2 in this branch ships its own EXPORT_IMAGE -- suppress it
+          # so the only image produced is the one from our final stage.
+          touch stage2/SKIP_IMAGES
+
+          cat > config <<EOF
+          IMG_NAME='stepmania-cabinet'
+          RELEASE='${{ env.RELEASE }}'
+          ARCH='arm64'
+          DEPLOY_COMPRESSION='xz'
+          LOCALE_DEFAULT='en_US.UTF-8'
+          TARGET_HOSTNAME='stepmania'
+          FIRST_USER_NAME='stepmania'
+          FIRST_USER_PASS='stepmania'
+          ENABLE_SSH=1
+          STAGE_LIST='stage0 stage1 stage2 ./stage-stepmania'
+          # Native arm64 host building for an arm64 target: no cross-arch
+          # emulation needed.
+          USE_QEMU=0
+          EOF
+
+      - name: Build image
+        working-directory: pi-gen
+        env:
+          SMTOOLS_REPO_DIR: ${{ github.workspace }}/stepmania-cabinet-tools
+        run: sudo -E ./build.sh
+
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: stepmania-cabinet-rpi-image
+          path: |
+            pi-gen/deploy/*.img.xz
+            pi-gen/deploy/*.sha256
+          if-no-files-found: error
+
