@@ -121,7 +121,7 @@
 #   this will be changeable over a cockpit plugin
 - name: Ensure config.txt includes the DPI mode file
   ansible.builtin.lineinfile:
-    path: "{{ boot_config_path }}"
+    path: /boot/firmware/config.txt
     line: "include dpi-config.txt"
     insertafter: EOF
     state: present
