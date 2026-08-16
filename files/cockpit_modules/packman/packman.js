@@ -6,7 +6,7 @@
     // ---------------------------------------------------------------------
 
     const STEPMANIA_USER = "stepmania";
-    const ENV_FILE = "/home/stepmania/packman_env";
+    const ENV_FILE = "/home/stepmania/packman/packman_env";
     const PACKMAN_DIR = "/home/stepmania/packman";
     const PACK_FOLDER = "/home/stepmania/songs";
 

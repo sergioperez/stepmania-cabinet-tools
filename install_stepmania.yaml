@@ -332,7 +332,12 @@
     ansible.builtin.command: "systemctl set-default graphical.target"
 
   - name: Install sm-packman
-    ansible.builtin.include_tasks: tasks/packman.yaml
+    ansible.builtin.include_tasks:
+      file: tasks/packman.yaml
+      apply:
+        tags: packman
+    tags:
+    - packman
 
   - name: Check if this is a Raspberry Pi
     ansible.builtin.slurp:

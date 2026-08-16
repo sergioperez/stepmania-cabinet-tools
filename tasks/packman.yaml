@@ -35,3 +35,31 @@
     mode: "0755"
     owner: stepmania
     group: stepmania
+
+- name: Create packman_env file with empty defaults
+  ansible.builtin.copy:
+    dest: "{{ packman_dir }}/packman_env"
+    content: |
+      SM_PACK_SEARCH_URL=""
+      PACK_YAML_URL=""
+      DISABLE_PACKMAN=true
+      PACKMAN_DIR=/home/stepmania/packman
+      PACK_FOLDER=/home/stepmania/songs
+    force: false
+    owner: stepmania
+    group: stepmania
+    mode: '0644'
+
+# Systemd unit - Start packman on boot
+- name: Install packman systemd unit
+  ansible.builtin.template:
+    src: files/packman/packman.service.j2
+    dest: /etc/systemd/system/packman.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start packman service
+  ansible.builtin.systemd:
+    name: packman.service
+    enabled: true

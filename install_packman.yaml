@@ -118,7 +118,7 @@
     # Systemd unit - Start packman on boot
     - name: Install packman systemd unit
       ansible.builtin.template:
-        src: files/packman/packman.service.j2
+        src: files/packman/packman-standalone.service.j2
         dest: /etc/systemd/system/packman.service
         owner: root
         group: root

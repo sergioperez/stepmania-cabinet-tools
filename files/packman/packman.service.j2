@@ -5,11 +5,7 @@ Wants=graphical.target
 
 [Service]
 Type=oneshot
-Environment=PACKMAN_DIR={{ packman_dir }}
-Environment=SM_PACK_SEARCH_URL={{ sm_pack_search_url }}
-Environment=PACK_FOLDER={{ pack_folder }}
-Environment=PACK_YAML_URL={{ pack_yaml_url | default("") }}
-Environment=DISABLE_PACKMAN={{ disable_packman | default(false) | lower }}
+EnvironmentFile={{ packman_dir }}/packman_env
 ExecStart=/usr/local/bin/packman
 RemainAfterExit=yes
 User=stepmania
