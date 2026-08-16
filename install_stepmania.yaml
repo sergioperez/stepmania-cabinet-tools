@@ -152,21 +152,6 @@
       cache_valid_time: 600
     with_items: "{{ installed_games }}"
 
-  # Harmless files for all platforms
-  # but fixing for some (as rpi5)
-  - name: Copy platform fixes
-    ansible.builtin.copy:
-       src: "{{ item.file }}"
-       dest: "{{ item.destination }}"
-       owner: stepmania
-       group: stepmania
-       mode: '0644'
-    with_items:
-    - file: files/misc/99-rpi5-xorg-fix.conf
-      destination: /etc/X11/xorg.conf.d/99-rpi5-xorg-fix.conf
-    tags:
-    - fixes
-
   - name: Create file that defines which game will be executed
     ansible.builtin.copy:
        dest: /home/stepmania/run_game.sh
@@ -342,13 +327,6 @@
       nopassword: true
     tags:
       - sudo
-
-  - name: Restart polkit
-    ansible.builtin.systemd:
-      name: polkit
-      state: restarted
-    tags:
-    - live
 
   - name: Set default to graphical target
     ansible.builtin.command: "systemctl set-default graphical.target"
