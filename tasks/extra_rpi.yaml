@@ -23,6 +23,7 @@
   - avahi-daemon.service
   - nfs-client.service
   - dphys-swapfile.service
+  - userconfig.service
   tags: systemd
 
 - name: Disable swap
