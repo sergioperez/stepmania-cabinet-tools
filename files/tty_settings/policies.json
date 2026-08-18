@@ -1,30 +1,11 @@
 {
   "policies": {
-    "DisableDeveloperTools": true,
     "DisableSetDesktopBackground": true,
     "DisableProfileImport": true,
-    "DisableFirefoxScreenshots": true,
-    "DisablePocket": true,
     "DisableFeedbackCommands": true,
-    "DisableFormHistory": true,
     "DisableMasterPasswordCreation": true,
     "DisableSecurityBypass": { "InvalidCertificate": false, "SafeBrowsing": false },
     "BlockAboutConfig": true,
-    "BlockAboutSupport": true,
-    "DisplayBookmarksToolbar": "never",
-    "DisableAppUpdate": true,
-    "HardwareAcceleration": true,
-    "DontCheckDefaultBrowser": true,
-    "OverrideFirstRunPage": "",
-    "OverridePostUpdatePage": "",
-    "SessionStore": {
-      "Locked": true
-    },
-    "NewTabPage": false,
-    "Homepage": {
-      "URL": "https://localhost:9090",
-      "Locked": true,
-      "StartPage": "homepage"
-    }
+    "BlockAboutSupport": true
   }
 }

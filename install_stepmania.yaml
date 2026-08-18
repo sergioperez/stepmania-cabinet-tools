@@ -204,6 +204,7 @@
     - tty_settings/tty1-game.sh
     - tty_settings/tty2-firefox.sh
     - tty_settings/tty3-desktop.sh
+    tags: tty
 
   # Upload systemd units
   - name: tty-all - Upload ttyX-name.sh scripts
@@ -219,6 +220,7 @@
     - tty_settings/game.service
     - tty_settings/settings.service
     - tty_settings/desktop.service
+    tags: tty
 
   # Upload greetd config
   - name: tty3 - Upload greetd config.toml
@@ -228,13 +230,31 @@
       owner: root
       group: root
       mode: '0644'
+    tags: tty
 
   - name: tty2-settings - Create firefox profile directory
     ansible.builtin.file:
-      path: "/home/stepmania/.settings-firefox-profile"
+      path: "/home/stepmania/.settings_firefox_profile"
       state: directory
       owner: stepmania
       group: stepmania
+    tags: tty
+
+  - name: tty2-settings - Configure firefox to not start in safe mode
+    ansible.builtin.file:
+      path: "/home/stepmania/.settings_firefox_profile"
+      state: directory
+      owner: stepmania
+      group: stepmania
+    tags: tty
+
+  - name: Copy firefox settings tty configuration
+    ansible.builtin.copy:
+      src: tty_settings/firefox_user.js
+      dest: /home/stepmania/.settings_firefox_profile/user.js
+      owner: stepmania
+      group: stepmania
+      mode: '0644'
 
   - name: Copy JWM config
     ansible.builtin.copy:
@@ -243,6 +263,7 @@
       owner: root
       group: root
       mode: '0644'
+    tags: tty
 
   - name: ensure firefox policies directory exists
     ansible.builtin.file:
@@ -251,6 +272,7 @@
       owner: root
       group: root
       mode: '0755'
+    tags: tty
 
   - name: create firefox profile
     ansible.builtin.copy:
@@ -259,12 +281,14 @@
       owner: root
       group: root
       mode: '0644'
+    tags: tty
 
   - name: Ensure greetd is disabled
     ansible.builtin.systemd:
       name: greetd.service
       masked: true
       enabled: false
+    tags: tty
 
   - name: Upload cockpit plugins
     ansible.builtin.copy:

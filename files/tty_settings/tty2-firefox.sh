@@ -3,7 +3,8 @@ RES=$(xrandr | grep '\*' | head -1 | awk '{print $1}')
 WIDTH=$(echo $RES | cut -d'x' -f1)
 HEIGHT=$(echo $RES | cut -d'x' -f2)
 
-PROFILE_DIR="$(mktemp -d)"
+PROFILE_DIR="/home/stepmania/.settings_firefox_profile"
+mkdir -p "${PROFILE_DIR}"
 
 FINGERPRINT=$(
   openssl s_client -connect "localhost:9090" </dev/null 2>/dev/null \
