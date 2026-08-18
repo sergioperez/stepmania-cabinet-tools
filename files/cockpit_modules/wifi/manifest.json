@@ -7,7 +7,7 @@
     "tools": {
         "index": {
             "label": "Wi-Fi",
-            "order": 210
+            "order": 50
         }
     }
 }

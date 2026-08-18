@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Input</title>
+    <link rel="stylesheet" href="input.css">
+    <script src="../base1/cockpit.js"></script>
+</head>
+<body>
+<div class="page">
+    <header class="page-header">
+        <h1>Input</h1>
+        <button type="button" id="refresh" class="btn btn-plain">Refresh</button>
+    </header>
+
+    <section class="card" id="card">
+        <h2>Input order (ITGMania)</h2>
+
+        <div class="field">
+            <span class="field-label">Driver</span>
+            <div class="options" id="drivers"></div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Input Order</span>
+            <div class="options toggle" id="mode">
+                <button type="button" class="opt" data-mode="auto">Auto</button>
+                <button type="button" class="opt" data-mode="manual">Manual</button>
+            </div>
+        </div>
+
+        <div class="field field-devices" id="devices-field">
+            <span class="field-label">Devices</span>
+            <div class="devices-body">
+                <div class="devices-bar">
+                    <p class="hint" id="devices-hint"></p>
+                    <button type="button" id="clear" class="btn btn-plain btn-small">Clear</button>
+                </div>
+                <div class="devices" id="devices"></div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="button" id="apply" class="btn btn-primary">Apply configuration</button>
+        </div>
+
+        <div id="status" class="status" hidden></div>
+    </section>
+</div>
+<script src="input.js"></script>
+</body>
+</html>

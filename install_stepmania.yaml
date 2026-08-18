@@ -307,6 +307,7 @@
     - packman
     - game-manager
     - debian-update
+    - input
 
   - name: DBus rule - allow netdev group to manage wifi
     ansible.builtin.copy:

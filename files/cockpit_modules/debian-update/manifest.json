@@ -3,7 +3,7 @@
     "tools": {
         "index": {
             "label": "System Update",
-            "order": 255
+            "order": 70
         }
     }
 }

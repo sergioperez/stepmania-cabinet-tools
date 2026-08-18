@@ -3,11 +3,10 @@
     "requires": {
         "cockpit": "266"
     },
-
     "tools": {
         "index": {
-            "label": "Ethernet",
-            "order": 60
+            "label": "Input",
+            "order": 40
         }
     }
 }

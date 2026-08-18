@@ -5,7 +5,7 @@
         "pinger": {
             "label": "Sound Device",
             "path": "itgmania.html",
-            "order": 200
+            "order": 30
         }
     }
 }
