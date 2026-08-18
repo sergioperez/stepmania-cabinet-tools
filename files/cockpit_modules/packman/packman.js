@@ -9,6 +9,7 @@
     const ENV_FILE = "/home/stepmania/packman/packman_env";
     const PACKMAN_DIR = "/home/stepmania/packman";
     const PACK_FOLDER = "/home/stepmania/songs";
+    const PACKMAN_TMPDIR = "/home/stepmania/packman/tmp";
 
     const DB_CACHE_FILE = PACKMAN_DIR + "/packs_db.csv";
     const DB_META_FILE = PACKMAN_DIR + "/packs_db.updated";
@@ -103,6 +104,7 @@
             "DISABLE_PACKMAN=" + values.DISABLE_PACKMAN,
             "PACKMAN_DIR=" + PACKMAN_DIR,
             "PACK_FOLDER=" + PACK_FOLDER,
+            "TMPDIR=" + PACKMAN_TMPDIR,
             "",
         ];
         return lines.join("\n");
@@ -497,7 +499,8 @@
             DISABLE_PACKMAN: disable ? "true" : "false",
         });
 
-        fileWrite(ENV_FILE, content)
+        ensurePackmanDir()
+            .then(() => fileWrite(ENV_FILE, content))
             .then(() => cockpit.spawn(["chown", STEPMANIA_USER + ":" + STEPMANIA_USER, ENV_FILE],
                                        { superuser: "try", err: "message" }).catch(() => {}))
             .then(() => cockpit.spawn(["chmod", "640", ENV_FILE],
@@ -799,6 +802,7 @@
     function init() {
         document.getElementById("static-packman-dir").textContent = PACKMAN_DIR;
         document.getElementById("static-pack-folder").textContent = PACK_FOLDER;
+        document.getElementById("static-tmpdir").textContent = PACKMAN_TMPDIR;
 
         document.querySelectorAll(".pm-tab").forEach(btn => {
             btn.addEventListener("click", () => switchTab(btn.dataset.tab));

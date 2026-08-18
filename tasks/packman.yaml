@@ -28,14 +28,19 @@
     path: /usr/local/bin/packman
     mode: "0755"
 
-- name: Ensure packman_dir exists
+- name: Ensure packman_dir and its tmpdir exists
   ansible.builtin.file:
-    path: "{{ packman_dir }}"
+    path: "{{ item }}"
     state: directory
     mode: "0755"
     owner: stepmania
     group: stepmania
+  with_items:
+  - "{{ packman_dir }}"
+  - "{{ packman_dir }}/tmp"
 
+# Setting packman tmp in persistent storage
+#   reducing ram usage
 - name: Create packman_env file with empty defaults
   ansible.builtin.copy:
     dest: "{{ packman_dir }}/packman_env"
@@ -45,6 +50,7 @@
       DISABLE_PACKMAN=true
       PACKMAN_DIR=/home/stepmania/packman
       PACK_FOLDER=/home/stepmania/songs
+      TMPDIR=/home/stepmania/packman/tmp
     force: false
     owner: stepmania
     group: stepmania
