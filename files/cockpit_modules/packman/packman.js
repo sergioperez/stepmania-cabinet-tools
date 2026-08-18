@@ -160,6 +160,12 @@
         return "";
     }
 
+    function formatSizeMiB(bytes) {
+        const n = Number(bytes);
+        if (!isFinite(n) || n < 0) return "—";
+        return (n / (1024 * 1024)).toFixed(1);
+    }
+
     function csvToRows(text) {
         const rows = parseCsv(text);
         if (rows.length === 0) return [];
@@ -174,6 +180,7 @@
                 id: findValue(obj, "ID"),
                 name: findValue(obj, "Pack Name"),
                 songCount: findValue(obj, "Song Count"),
+                sizeBytes: findValue(obj, "Size"),
                 raw: obj,
             });
         }
@@ -629,7 +636,7 @@
             const tr = document.createElement("tr");
             tr.className = "pm-empty-row";
             const td = document.createElement("td");
-            td.colSpan = 4;
+            td.colSpan = 5;
             td.textContent = state.dbRows.length === 0
                 ? 'No pack database loaded yet. Click "Refresh database".'
                 : "No packs match your search.";
@@ -646,6 +653,10 @@
                 const tdCount = document.createElement("td");
                 tdCount.textContent = row.songCount;
                 tr.appendChild(tdCount);
+
+                const tdSize = document.createElement("td");
+                tdSize.textContent = formatSizeMiB(row.sizeBytes);
+                tr.appendChild(tdSize);
 
                 const installed = state.installedIds.has(String(row.id));
                 const tdInstalled = document.createElement("td");
