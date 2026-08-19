@@ -26,6 +26,13 @@
   - userconfig.service
   tags: systemd
 
+- name: Remove not needed files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+  - /etc/ssh/sshd_config.d/rename_user.conf
+
 - name: Disable swap
   ansible.builtin.lineinfile:
     path: "/etc/dphys-swapfile"
