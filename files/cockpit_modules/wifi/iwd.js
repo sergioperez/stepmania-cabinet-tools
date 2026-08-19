@@ -32,6 +32,12 @@
     let refreshTimer = null;
     let agentProc = null;      // currently running agent helper process, if any
 
+    // Last known [General].Country from /etc/iwd/main.conf:
+    //   ""    - positively known to be unset -> Networks tab is locked
+    //   "XX"  - configured -> Networks tab usable
+    //   null  - not determined yet (e.g. main.conf unreadable); don't lock
+    let configuredCountry = null;
+
     const el = (id) => document.getElementById(id);
 
     function setStatus(text) {
@@ -1138,7 +1144,9 @@
 
         loadMainConfLines()
             .then((lines) => {
-                selectCountry(currentCountryFromLines(lines));
+                const code = currentCountryFromLines(lines);
+                selectCountry(code);
+                setConfiguredCountry(code);
                 setSettingsStatus("");
             })
             .catch((err) => {
@@ -1173,8 +1181,11 @@
                     () => { file.close(); },
                     (err) => { file.close(); throw err; });
             })
-            .then(() => {
-                setSettingsStatus("Saved.");
+            // Saving "Not set" locks the Networks tab again; saving a real
+            // country unblocks the radios.
+            .then(() => setConfiguredCountry(code, true))
+            .then((unblocked) => {
+                setSettingsStatus(unblocked ? "Saved. Wireless radios unblocked." : "Saved.");
                 if (!window.confirm("Restart the iwd service now to apply the new country? " +
                                      "This will briefly disconnect Wi-Fi."))
                     return;
@@ -1194,7 +1205,90 @@
             });
     }
 
+    /* ---------------------------------------------------------------- */
+    /* Country gate                                                      */
+    /*                                                                    */
+    /* Without [General].Country iwd falls back to whatever regulatory    */
+    /* domain the kernel/driver happens to default to, so keep the        */
+    /* Networks tab locked and land on Settings until a country is set.   */
+    /* ---------------------------------------------------------------- */
+
+    function networksLocked() {
+        return configuredCountry === "";
+    }
+
+    function applyCountryGate() {
+        const locked = networksLocked();
+        const wifiBtn = el("tab-btn-wifi");
+
+        wifiBtn.disabled = locked;
+        wifiBtn.title = locked ? "Select a country in Settings first." : "";
+        el("country-required-bar").classList.toggle("hidden", !locked);
+
+        // Only switch when the Networks panel is actually the visible one:
+        // switchTab("settings") re-runs loadSettingsTab(), which calls back
+        // in here, and this check is what stops that from recursing.
+        if (locked && !el("tab-wifi").classList.contains("hidden"))
+            switchTab("settings");
+    }
+
+    // rfkill blocks are independent of iwd's own Powered property: a
+    // soft-blocked radio stays down no matter what iwd is told, and a
+    // missing regulatory domain is a common reason for a board to come up
+    // blocked in the first place. So once a country is known to be
+    // configured, clear any blocks. Best effort - rfkill(8) may not be
+    // installed, in which case there's nothing to do and nothing to report.
+    let rfkillUnblockTried = false;
+
+    function unblockRfkill() {
+        return cockpit.spawn(["rfkill", "unblock", "all"],
+                              { superuser: "try", err: "message" })
+            .then(() => true)
+            .catch((err) => {
+                const msg = dbusErrorMessage(err);
+                if ((err && err.problem === "not-found") ||
+                    /not found|No such file/i.test(msg))
+                    return false;   // rfkill isn't available on this system
+                console.warn("rfkill unblock all failed: " + msg);
+                return false;
+            });
+    }
+
+    function setConfiguredCountry(code, forceUnblock) {
+        configuredCountry = code || "";
+        applyCountryGate();
+
+        if (!configuredCountry)
+            return Promise.resolve(false);
+        // Only once per page load unless a save explicitly asks again, so
+        // that merely visiting the Settings tab doesn't respawn this.
+        if (rfkillUnblockTried && !forceUnblock)
+            return Promise.resolve(false);
+        rfkillUnblockTried = true;
+
+        return unblockRfkill().then((ok) => {
+            if (ok)
+                refresh().then(refreshOrderedNetworks);
+            return ok;
+        });
+    }
+
+    // Read main.conf once at startup to decide the initial tab. A failed
+    // read (typically no administrative access yet) leaves the state
+    // unknown rather than locking the user out on the strength of it.
+    function initCountryGate() {
+        return loadMainConfLines()
+            .then((lines) => setConfiguredCountry(currentCountryFromLines(lines)))
+            .catch(() => {
+                configuredCountry = null;
+                applyCountryGate();
+            });
+    }
+
     function switchTab(tab) {
+        if (tab === "wifi" && networksLocked())
+            tab = "settings";
+
         const wifiBtn = el("tab-btn-wifi");
         const settingsBtn = el("tab-btn-settings");
         const wifiPanel = el("tab-wifi");
@@ -1386,6 +1480,10 @@
         populateCountryPicker();
         el("country-save").onclick = saveCountry;
 
+        // Decides the starting tab; must run before anything else can
+        // switch tabs.
+        initCountryGate();
+
         adminPermission.addEventListener("changed", () => {
             if (adminPermission.allowed) {
                 el("admin-bar").classList.add("hidden");
@@ -1394,10 +1492,15 @@
             // The Settings tab's own controls are gated independently
             // (see setSettingsControlsEnabled) since this can change while
             // that tab is the active one.
-            if (!el("tab-settings").classList.contains("hidden"))
+            if (!el("tab-settings").classList.contains("hidden")) {
                 loadSettingsTab();
-            else
+            } else {
                 setSettingsControlsEnabled(adminPermission.allowed === true);
+                // main.conf may have been unreadable before the unlock, so
+                // the country gate could still be in the "unknown" state.
+                if (adminPermission.allowed)
+                    initCountryGate();
+            }
         });
         el("admin-btn").onclick = () => {
             // Clicking Cockpit's own shield/lock button is the normal way
