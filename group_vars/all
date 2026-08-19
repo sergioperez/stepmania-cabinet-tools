@@ -1,4 +1,13 @@
 game_releases:
+  deadsync-0-5-690:
+    url:
+      x86_64: "https://github.com/pnn64/deadsync/releases/download/v0.5.690/deadsync-v0.5.690-x86_64-linux.tar.gz"
+      arm64: "https://github.com/pnn64/deadsync/releases/download/v0.5.690/deadsync-v0.5.690-arm64-linux.tar.gz"
+    dest: "/home/stepmania/game/deadsync0-5-690"
+    config_file: "/home/stepmania/.local/share/deadsync/deadsync.ini"
+    binary_path: "/home/stepmania/game/deadsync0-5-690/deadsync"
+    extract_opts: ["--strip-components=1"]
+    dependencies: []
   deadsync-0-5-172:
     url:
       x86_64: "https://github.com/pnn64/deadsync/releases/download/v0.5.172/deadsync-v0.5.172-x86_64-linux.tar.gz"
