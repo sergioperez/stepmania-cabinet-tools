@@ -3,5 +3,5 @@
 [Match]
 Type=wlan
 
-[Network]
+[Link]
 Unmanaged=yes
