@@ -31,19 +31,8 @@ INV
 # Already running as root inside the chroot, so no become/sudo password
 # is needed here (unlike the normal `ansible-playbook -k` SSH workflow).
 #
-# TODO: check install_stepmania.yaml / group_vars/all for any other
-# variables the real `inventory` file normally supplies (this repo's
-# README mentions at least stepmania_password, disable_packman,
-# sm_pack_search_url, pack_yaml_url) and pass them below with -e, since
-# that inventory file isn't used for this local, image-build-time run.
-#
-# TODO: check install_stepmania.yaml for any `systemctl start ...` or
-# reboot tasks -- those will fail or misbehave in a chroot with no
-# running init, and should be changed to `systemctl enable` (or skipped
-# with a `when: not ansible_is_chroot` guard) so they only take effect on
-# first real boot.
 ansible-playbook -i inventory.local install_stepmania.yaml \
-  -e stepmania_password=stepmania -e raspberrypi_build=true \
+  -e stepmania_password=1234 e raspberrypi_build=true \
   --skip-tags=reboot -e rpi_dpi_mode=720x480i@60hz
 
 rm -f inventory.local
