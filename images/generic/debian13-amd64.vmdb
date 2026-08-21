@@ -1,0 +1,218 @@
+# vmdb2 spec: Debian 13 (trixie) x86_64 ITGMania cabinet image
+#
+# Build with images/generic/build-image.sh (which is what the GitHub Actions
+# workflow calls). Layout: GPT + ESP + ext4 root, UEFI GRUB.
+#
+# The repo is expected to be bind-mounted at /build inside the builder
+# container, so install_stepmania.yaml lives at /build/install_stepmania.yaml.
+
+steps:
+  - mkimg: "{{ output }}"
+    size: to_be_changed
+
+  - mklabel: gpt
+    device: "{{ output }}"
+
+  - mkpart: primary
+    device: "{{ output }}"
+    start: 1M
+    end: 513M
+    tag: efi
+
+  - mkpart: primary
+    device: "{{ output }}"
+    start: 513M
+    end: 100%
+    tag: rootfs
+
+  # NOTE: the ESP type GUID (parted "set 1 esp on") is applied by
+  # build-image.sh after vmdb2 finishes -- vmdb2's shell plugin requires a
+  # root-fs key, so a bare shell step here matches no runner.
+
+  - kpartx: "{{ output }}"
+
+  - mkfs: vfat
+    partition: efi
+    label: ESP
+
+  - mkfs: ext4
+    partition: rootfs
+    label: ROOTFS
+
+  - mount: rootfs
+
+  # If --rootfs-tarball points at an existing tarball, unpack it and skip
+  # debootstrap + base apt below (sets the rootfs_unpacked flag).
+  - unpack-rootfs: rootfs
+
+  - debootstrap: trixie
+    mirror: http://deb.debian.org/debian
+    target: rootfs
+    unless: rootfs_unpacked
+
+  # Mounted only now: debootstrap refuses a target directory that already
+  # contains anything, and mounting the ESP would create /boot first.
+  - mount: efi
+    mount-on: rootfs
+    dirname: /boot/efi
+
+  - chroot: rootfs
+    shell: |
+      set -eu
+      rm -f /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources
+      cat > /etc/apt/sources.list.d/debian.sources <<'EOF'
+      Types: deb
+      URIs: http://deb.debian.org/debian
+      Suites: trixie trixie-updates
+      Components: main contrib non-free non-free-firmware
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+      Types: deb
+      URIs: http://security.debian.org/debian-security
+      Suites: trixie-security
+      Components: main contrib non-free non-free-firmware
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+      EOF
+      apt-get update
+    unless: rootfs_unpacked
+
+  # Base system only.
+  # StepMania/ITGMania/Deadsync specifis are managed by the playbook
+  # python3 + python3-apt are what the Ansible chroot connection needs.
+  - apt: install
+    tag: rootfs
+    recommends: false
+    packages:
+      - linux-image-amd64
+      - grub-efi-amd64
+      - shim-signed
+      - systemd-sysv
+      - systemd-timesyncd
+      - init
+      - locales
+      - console-setup
+      - keyboard-configuration
+      - ca-certificates
+      - python3
+      - python3-apt
+      - sudo
+      - openssh-server
+      - cloud-guest-utils
+      - firmware-linux
+      - firmware-misc-nonfree
+      - firmware-realtek
+      - firmware-iwlwifi
+    unless: rootfs_unpacked
+
+  - cache-rootfs: rootfs
+    unless: rootfs_unpacked
+
+  # System identity / fstab / first-boot growth. Cheap and idempotent, so
+  # it runs on cached-rootfs builds too.
+  - chroot: rootfs
+    shell: |
+      set -eu
+
+      echo itgmania > /etc/hostname
+      cat > /etc/hosts <<'EOF'
+      127.0.0.1	localhost
+      127.0.1.1	itgmania
+      ::1		localhost ip6-localhost ip6-loopback
+      EOF
+
+      cat > /etc/fstab <<'EOF'
+      LABEL=ROOTFS /		ext4	defaults,noatime,errors=remount-ro	0 1
+      LABEL=ESP	/boot/efi	vfat	umask=0077			0 1
+      EOF
+
+      # Grow the root partition + filesystem to the whole disk on first boot,
+      # so the same 8G artifact is usable on any size of SSD.
+      cat > /etc/systemd/system/expand-rootfs.service <<'EOF'
+      [Unit]
+      Description=Expand root filesystem to fill the disk
+      DefaultDependencies=no
+      Conflicts=shutdown.target
+      After=systemd-remount-fs.service
+      Before=sysinit.target
+      ConditionPathExists=!/var/lib/expand-rootfs.done
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/usr/local/sbin/expand-rootfs
+      ExecStartPost=/bin/touch /var/lib/expand-rootfs.done
+
+      [Install]
+      WantedBy=sysinit.target
+      EOF
+
+      cat > /usr/local/sbin/expand-rootfs <<'EOF'
+      #!/bin/sh
+      set -eu
+      root_src=$(findmnt -no SOURCE /)
+      disk=$(lsblk -no PKNAME "$root_src")
+      partnum=$(cat "/sys/class/block/$(basename "$root_src")/partition")
+      growpart "/dev/$disk" "$partnum" || true
+      resize2fs "$root_src" || true
+      EOF
+      chmod 0755 /usr/local/sbin/expand-rootfs
+      systemctl enable expand-rootfs.service
+
+  # Run the cabinet playbook against the image over the chroot connection.
+  - shell: |
+      set -eu
+
+      # Keep dpkg from starting daemons inside the chroot.
+      printf '#!/bin/sh\nexit 101\n' > "$ROOT/usr/sbin/policy-rc.d"
+      chmod 0755 "$ROOT/usr/sbin/policy-rc.d"
+
+      # DNS for apt and for the game downloads the playbook performs.
+      cp /etc/resolv.conf "$ROOT/etc/resolv.conf"
+
+      cleanup() {
+        umount -l "$ROOT/dev/pts" 2>/dev/null || true
+        umount -l "$ROOT/dev"     2>/dev/null || true
+        umount -l "$ROOT/proc"    2>/dev/null || true
+        umount -l "$ROOT/sys"     2>/dev/null || true
+        rm -f "$ROOT/usr/sbin/policy-rc.d"
+      }
+      trap cleanup EXIT
+
+      mount -t proc  proc "$ROOT/proc"
+      mount -t sysfs sys  "$ROOT/sys"
+      mount --bind /dev     "$ROOT/dev"
+      mount --bind /dev/pts "$ROOT/dev/pts"
+
+      cd /build
+      ANSIBLE_CONFIG=/build/ansible.cfg \
+      ANSIBLE_HOST_KEY_CHECKING=False \
+      ansible-playbook \
+        -i "$ROOT," \
+        -c community.general.chroot \
+        -e ansible_python_interpreter=/usr/bin/python3 \
+        -e image_build=true \
+        -e stepmania_password="${STEPMANIA_PASSWORD:-stepmania}" \
+        /build/install_stepmania.yaml
+    root-fs: rootfs
+
+  # Strip build-time identity so every flashed device is unique.
+  - chroot: rootfs
+    shell: |
+      set -eu
+      apt-get clean
+      rm -f /etc/ssh/ssh_host_*
+      rm -f /etc/resolv.conf
+      ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || true
+      : > /etc/machine-id
+      rm -rf /var/lib/dbus/machine-id /tmp/* /var/tmp/*
+      find /var/log -type f -exec truncate -s 0 {} +
+
+  - grub: uefi
+    tag: rootfs
+    efi: efi
+    device: "{{ output }}"
+
+  - shell: |
+      used=$(df -BM --output=used "$ROOT" | tail -1 | tr -dc '0-9')
+      echo "####### Minimum recommended image size: $(( 514 + used * 12 / 10 ))M"
+    root-fs: rootfs

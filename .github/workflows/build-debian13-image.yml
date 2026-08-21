@@ -1,0 +1,57 @@
+name: Build Debian 13 image (x86_64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      use_cache:
+        description: "Reuse the cached debootstrap rootfs tarball"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Restore base rootfs cache
+        if: ${{ inputs.use_cache }}
+        uses: actions/cache@v6
+        with:
+          path: .cache
+          key: rootfs-trixie-amd64-${{ hashFiles('images/generic/debian13-amd64.vmdb') }}
+
+      - name: Build image with vmdb2
+        run: |
+          sudo -E podman run --rm --privileged \
+            -v /dev:/dev \
+            -v "$GITHUB_WORKSPACE":/build \
+            -w /build \
+            docker.io/library/debian:trixie \
+            bash /build/images/generic/build-image.sh
+
+      - name: Fix artifact ownership
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" out .cache || true
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: stepmania-debian13-amd64
+          path: |
+            out/*.img.zst
+            out/*.sha256
+          retention-days: 14
+          compression-level: 0
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-log
+          path: out/*.log
+          retention-days: 7
