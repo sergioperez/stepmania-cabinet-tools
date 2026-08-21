@@ -32,7 +32,7 @@ INV
 # is needed here (unlike the normal `ansible-playbook -k` SSH workflow).
 #
 ansible-playbook -i inventory.local install_stepmania.yaml \
-  -e stepmania_password=1234 e raspberrypi_build=true \
+  -e stepmania_password=1234 -e raspberrypi_build=true \
   --skip-tags=reboot -e rpi_dpi_mode=720x480i@60hz
 
 rm -f inventory.local
