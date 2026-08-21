@@ -318,6 +318,15 @@
       group: root
     tags: wifi
 
+  - name: Install CPU governor unit
+    ansible.builtin.copy:
+      src: misc/cpu-governor.service
+      dest: /etc/systemd/system/cpu-governor.service
+      owner: root
+      group: root
+      mode: "0644"
+    tags: systemd
+
   - name: Enable game and required systemd units
     ansible.builtin.systemd:
       name: "{{ item }}"
@@ -326,6 +335,7 @@
     - tty-watch.path
     - cockpit.service
     - game.service
+    - cpu-governor.service
     tags:
     - cockpit
     - network
