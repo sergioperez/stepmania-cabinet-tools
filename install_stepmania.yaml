@@ -115,6 +115,7 @@
     - ".itgmania/Save"
     - ".local/share/deadsync"
     - "songs"
+    - "tmp"
 
   - name: Set sound drivers to ALSA-sw - SM games based only
     ansible.builtin.ini_file:
@@ -336,6 +337,7 @@
     - cockpit.service
     - game.service
     - cpu-governor.service
+    - iwd.service
     tags:
     - cockpit
     - network

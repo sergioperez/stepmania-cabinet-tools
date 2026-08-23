@@ -359,7 +359,7 @@
         const url = entry.url[localArch];
         const dest = entry.dest;
         const extractOpts = (entry.extract_opts || []).map(shQuote).join(" ");
-        const tmpFile = "/tmp/game-manager-" + id.replace(/[^A-Za-z0-9_.-]/g, "_") + ".archive";
+        const tmpFile = "/home/stepmania/tmp/game-manager-" + id.replace(/[^A-Za-z0-9_.-]/g, "_") + ".archive";
 
         busy = true;
         render();
